@@ -20,7 +20,7 @@ def start_peer_server(ip_address, port):
     """
     Sets up a server to accept incoming peer connections.
     """
-    def handle_client(client_socket):
+    def handle_client(client_socket: socket.socket):
         connection_ip = client_socket.getpeername()[0]
         print(f"New Connection: {connection_ip}")
 
@@ -71,13 +71,13 @@ def disseminate_peer_map():
     """
     Disseminates the current peer map to connected peers.
     """
-    peer_map[server_ip] = int(time.time() * 1000)
+    peer_map[server_ip] = time.time()
     delete_expired_peers()
 
     valid_entries = [
         (peer, timestamp)
         for peer, timestamp in peer_map.items()
-        if int(time.time() * 1000) - timestamp <= entry_ttl
+        if (time.time()  - timestamp) <= entry_ttl
     ]
 
     message = json.dumps(valid_entries)
@@ -107,7 +107,7 @@ def delete_expired_peers():
     """
     Deletes expired peers (timestamp < TTL).
     """
-    current_time = int(time.time() * 1000)
+    current_time = time.time() 
     for peer, timestamp in list(peer_map.items()):
         if current_time - timestamp > entry_ttl and peer != server_ip:
             print(f"Deleted peer: {peer}")
