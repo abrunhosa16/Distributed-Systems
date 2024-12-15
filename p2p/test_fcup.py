@@ -156,7 +156,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     server_port = sys.argv[1]
-    peers_ports = [int(port) for port in sys.argv[2:]]
+    peers_ports =sys.argv[2:]
 
     start_peer_server(server_port, 3000)
 
