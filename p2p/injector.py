@@ -4,7 +4,7 @@ import pickle
 '''Injector send a empty set to start operation.'''
 
 HOST = socket.gethostname()
-PORT = 12354
+PORT = 12359
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 client.bind((HOST, PORT))

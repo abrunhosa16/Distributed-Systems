@@ -30,13 +30,15 @@ threshold).
 
 '''
 # MAXIMUM TIME WITHOUT UPDATE
-DELTA = 30   
+DELTA = 60   
+my_set: dict
+my_set = dict()
 
 def poisson_delay(lambda_:int):
-    return -math.log(1.0 - random.random()) / lambda_
+    return -math.log(1.0 - random.random()) / (lambda_/60)
 
 def delay_poisson(lambda_: int):
-    return 60 * poisson_delay(lambda_)
+    return poisson_delay(lambda_)
 
 class logs:
     def __init__(self, hostname: str):
@@ -51,28 +53,32 @@ class logs:
         except Exception as e:
             print(f"Error setting up logger: {e}")
 
+def merge_set(dic1, dic2):
+    merged = dic1
+    for key in dic2:
+        if key in merged:
+            merged[key] = max(dic1[key], dic2[key])
+        else:
+            merged[key] = dic2[key]
+    return merged
 
-def dictionary_operations(my_set: dict, received_set: dict, server_port:int, current_time: time.time):
-    def merge_set(dic1, dic2):
-        merged = dic1 
-        for key in dic2:
-            if key in merged:
-                merged[key] = max(dic1[key], dic2[key])
-            else:
-                merged[key] = dic2[key]
-        return merged
-
-    merged_set = merge_set(my_set, received_set)
-        
-    merged_set[str(server_port)] = current_time
-
-    merged_set = {key: value for key, value in merged_set.items() if (current_time - value) > DELTA}
-    return merged_set
-
+def dictionary_operations(dic: dict[str, float], server_port: int) -> dict[str, float]:
+    current_time = time.time()  # Captura o tempo atual uma vez
+    # Usa compreensão de dicionário para filtrar valores dentro do intervalo DELTA
+    cop = {key: value for key, value in dic.items() if current_time - value <= DELTA}
+    
+    # Adiciona o servidor atual com o tempo atual
+    cop[server_port] = current_time
+    
+    # Exibe a diferença de tempo para cada chave
+    for key, value in dic.items():
+        print(f"{key}: {current_time - value}")
+    
+    return cop
 
 def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logger):
-    my_set: dict
-    my_set = dict()
+    global my_set
+
     server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     server.bind((host, port))  # Bind the server to the specified host and port
     server.listen()  # Start listening for incoming connections 
@@ -81,10 +87,10 @@ def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logg
 
     initial_time: time.time
     initial_time = time.time()
-    my_set[str(port)] = initial_time
+    my_set[port] = initial_time
 
     for neigh in neighboors:
-        my_set[str(neigh)] = initial_time # Dict indicating the current peer and the neighboors
+        my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
 
     while True:
         try:
@@ -95,19 +101,17 @@ def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logg
             logger.info(f"Server: new connection from {client_address[0]}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, neighboors, logger, port, my_set, )).start()
-
-            '''Here I need to change for a Poison delay, 2 events per minute. Question: Just one peer start all the process?'''
-            time.sleep(delay_poisson(2))
-
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, neighboors, logger, port)).start()
+        
 
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
-
-
+    
 # Function to handle individual client connections
-def handle_connection(client: socket.socket, client_address: str, neighboors: set[int], logger: logging.Logger, server_port:int, my_set):
+def handle_connection(client: socket.socket, client_address: str, neighboors: set[int], logger: logging.Logger, server_port:int):
+    global my_set  # Declare my_set as global
+
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
@@ -116,18 +120,20 @@ def handle_connection(client: socket.socket, client_address: str, neighboors: se
         logger.info(f"Server: message from host {client_address} [command = {received_set}]")
         print(f"{received_set} received from {client_address}")
 
-        current_time :time.time
-        current_time = time.time()
+        my_set = merge_set(my_set, received_set)
+        
+        delay = delay_poisson(2)
+        time.sleep(delay)
 
-        my_set = dictionary_operations(my_set, received_set, server_port, current_time) 
 
+        my_set = dictionary_operations(my_set, server_port) 
         send_data = pickle.dumps(my_set) # preparing dict to send for the neighboors
-        print(f"{my_set} sended")
         
         # Creating connection with all neighboors
         '''Probably i need to put a exception here, and is important put more logs.'''
         for port_peer in neighboors:
             try:
+                print(f"{my_set} sended to {port_peer}")
                 next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
                 next.connect((hostname, port_peer))
                 next.sendall(send_data)

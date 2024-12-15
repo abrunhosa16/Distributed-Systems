@@ -76,6 +76,11 @@ def dictionary_operations(dic: dict[str, float], server_port: int) -> dict[str, 
     
     return cop
 
+
+
+
+
+
 def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logger):
     global my_set
 
@@ -108,24 +113,36 @@ def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logg
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 
-def sending_message(port, neighboors):
+
+def gossip_algorithm(port, neighboors):
     global my_set
-    try:
-        delay = delay_poisson(2)
-        time.sleep(delay)
-        my_set[port] = time.time()
-        send_data = pickle.dumps(my_set) # preparing dict to send for the neighboors
-        for port_peer in neighboors:
+    my_set = dictionary_operations(my_set, port)
+
+    message = pickle.dumps(my_set)
+
+    for port_peer in neighboors:
             try:
                 print(f"{my_set} sended to {port_peer}")
                 next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
                 next.connect((hostname, port_peer))
-                next.sendall(send_data)
+                next.sendall(message)
             except Exception as e:
                 logging.error(f"Error trying connect: {e} {port_peer}")
 
-    except Exception as e:
-        print(e)
+
+
+def sending_message(port, neighboors):
+    def starting_algorithm(port, neighboors):
+        global my_set
+        delay = poisson_delay(2)
+        time.sleep(delay)
+        gossip_algorithm(port, neighboors)
+        print(f"Set was send {my_set}")
+    threading.Thread(target=starting_algorithm, args=(port, neighboors, ))
+
+        
+
+
 
     
 # Function to handle individual client connections
@@ -141,9 +158,6 @@ def handle_connection(client: socket.socket, client_address: str, neighboors: se
         print(f"{received_set} received from {client_address}")
 
         my_set = merge_set(my_set, received_set)
-        
-        delay = delay_poisson(2)
-        time.sleep(delay)
 
 
         my_set = dictionary_operations(my_set, server_port) 
