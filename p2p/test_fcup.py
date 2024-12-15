@@ -58,8 +58,8 @@ def handle_incoming_message(message):
         received_data = json.loads(message)
         print(received_data)
 
-        for peer_port, timestamp in received_data:
-            peer_map[peer_port] = max(peer_map.get(peer_port, 0), timestamp)
+        for peer_ip, timestamp in received_data:
+            peer_map[peer_ip] = max(peer_map.get(peer_ip, 0), timestamp)
 
         delete_expired_peers()
         print(f"Updated peer map: {len(peer_map)} total nodes ({list(peer_map.items())})")
@@ -71,7 +71,7 @@ def disseminate_peer_map():
     """
     Disseminates the current peer map to connected peers.
     """
-    peer_map[str(server_port)] = int(time.time() * 1000)
+    peer_map[server_ip] = int(time.time() * 1000)
     delete_expired_peers()
 
     valid_entries = [
@@ -109,7 +109,7 @@ def delete_expired_peers():
     """
     current_time = int(time.time() * 1000)
     for peer, timestamp in list(peer_map.items()):
-        if current_time - timestamp > entry_ttl and peer != str(server_port):
+        if current_time - timestamp > entry_ttl and peer != server_ip:
             print(f"Deleted peer: {peer}")
             del peer_map[peer]
 
@@ -155,13 +155,13 @@ if __name__ == "__main__":
         print("Usage: python your_script.py <selfPort> <peersPorts>")
         sys.exit(1)
 
-    server_port = sys.argv[1]
-    peers_ports =sys.argv[2:]
+    server_ip = sys.argv[1]
+    peers_ips =sys.argv[2:]
 
-    start_peer_server(server_port, 3000)
+    start_peer_server(server_ip, 3000)
 
-    for peer_port in peers_ports:
-        socket_array.append(setup_persistent_socket( peer_port, 3000, "PeerSocket"))
+    for peer_ip in peers_ips:
+        socket_array.append(setup_persistent_socket( peer_ip, 3000, "PeerSocket"))
 
     start_anti_entropy()
 
