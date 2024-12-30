@@ -7,58 +7,50 @@ import heapq
 import pickle
 import time 
 
-priority_queue = []
-clock = 0
+portuguese_cities = ["Lisboa",
+    "Porto",
+    "Coimbra",
+    "Braga",
+    "Aveiro",
+    "Faro",
+    "Serra da Estrela",
+    "Guimarães",
+    "Viseu",
+    "Leiria",
+    "Vale de Cambra",
+    "Sintra",
+    "Viana do Castelo",
+    "Tondela",
+    "Guarda",
+    "Caldas da Rainha",
+    "Covilhã",
+    "Bragança",
+    "Óbidos",
+    "Vinhais",
+    "Mirandela",
+    "Freixo de Espada à Cinta",
+    "Peniche"]
 
-australian_animals = {
-    "kangaroo",
-    "koala",
-    "wombat",
-    "platypus",
-    "echidna",
-    "emu",
-    "crocodile",
-    "tasmanian_devil",
-    "wallaby",
-    "cassowary",
-    "dingo",
-    "quokka",
-    "bandicoot",
-    "bilby",
-    "sugar_glider",
-    "lyrebird",
-    "cockatoo",
-    "kookaburra",
-    "goanna",
-    "frilled_lizard",
-    "fairy_penguin",
-    "numbat",
-    "tree_kangaroo",
-    "spotted_quoll",
-    "thorny_devil",
-    "Eva",
-    "Vini",
-    "Vicente",
-    "Carneiro",
-    "Queijo de ovelha",
+class PeerNode:
+    def __init__(self, hostname, port, peers):
+        self.hostname = hostname
+        self.port = port
+        self.peers = set(peers)
+        self.priority_queue = []
+        self.clock = 0
+        self.logger = self._setup_logger()
 
-}
+    def _setup_logger(self):
+        logger = logging.getLogger(f"{self.hostname}_log")
+        logger.setLevel(logging.INFO)
+        handler = logging.FileHandler(f"{self.hostname}_peer.log", mode="a")
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        return logger
 
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / lambda_
-
-class logs:
-    def __init__(self, hostname: str):
-        self.host: str = hostname
-        self.logger: logging.Logger = logging.getLogger("logfile")
-        self.logger.setLevel(logging.INFO)
-        try:
-            handler = logging.FileHandler(f"./{hostname}_peer.log", mode="a")
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-        except Exception as e:
-            print(f"Error setting up logger: {e}")
 
 def server_run(host: str, port: int, logger: logging.Logger):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
@@ -95,7 +87,7 @@ def handle_connection(client: socket.socket,  client_address, logger):
             ack = pickle.dumps((port, 'ack', clock))
             sending_message(ack)
 
-        heapq.heappush(priority_queue, (receiv_clock, (ip_peer, word)))
+        heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
         #logger.info(f"Server: message from host {client_address} [command = {received_word}]")
         print_message()
     except Exception as e:
@@ -122,17 +114,17 @@ def sending_message(message, retry_delay=4):
 
 
 def print_message():
-    ips = set(map(lambda values: values[1][0], priority_queue))
+    ips = set(map(lambda values: values[1][0], node.priority_queue))
     if peers.issubset(ips):
-        while len(priority_queue) > 0:
-            value = heapq.heappop(priority_queue)
+        while len(node.priority_queue) > 0:
+            value = heapq.heappop(node.priority_queue)
             if value[1][1] != 'ack':
                 print(value)
             
 def client():
     global clock
     clock += 1
-    word = random.choice(list(australian_animals))  # Convert set to list for random.choice
+    word = random.choice(list(portuguese_cities))  # Convert set to list for random.choice
     message = hostname, word, clock
     send_data = pickle.dumps(message)
     sending_message(send_data)
@@ -158,9 +150,9 @@ if __name__ == "__main__":
     port = 55555
     peers = sys.argv[1:]
     peers = set(map(str, peers))
-    log = logs(hostname)
+    node = PeerNode(hostname= hostname, port=port, peers=peers)
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     periodic_send()
-    server_run(hostname, port, log.logger)
+    server_run(hostname, port, node.logger)
 
