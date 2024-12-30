@@ -79,11 +79,11 @@ def handle_connection(client: socket.socket,  client_address, logger):
         msg: str = client.recv(1024)
         received_word = pickle.loads(msg)  # load the dict that came from another peer.
         ip_peer, word, receiv_clock = received_word
-        clock = max(node.clock, receiv_clock) + 1
+        node.clock = max(node.clock, receiv_clock) + 1
 
         '''bleat to everyone'''
         if word != 'ack':
-            ack = pickle.dumps((node.hostname, 'ack', clock))
+            ack = pickle.dumps((node.hostname, 'ack', node.clock))
             sending_message(ack)
 
         heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
