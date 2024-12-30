@@ -116,13 +116,9 @@ def sending_message(message, retry_delay=4):
 
 
 def print_message():
-    print('oi1')
     ips = set(map(lambda values: values[1][0], priority_queue))
     if peers.issubset(ips):
-        print('oi2')
-
         while len(priority_queue) > 0:
-            print('oi3')
             value = heapq.heappop(priority_queue)
             if value[1][1] != 'ack':
                 print(value)
