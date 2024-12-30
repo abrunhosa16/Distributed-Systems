@@ -116,9 +116,13 @@ def sending_message(message, retry_delay=4):
 
 
 def print_message():
+    print('oi1')
     ips = set(map(lambda values: values[1][0], priority_queue))
     if peers.issubset(ips):
+        print('oi2')
+
         while len(priority_queue) > 0:
+            print('oi3')
             value = heapq.heappop(priority_queue)
             if value[1][1] != 'ack':
                 print(value)
@@ -127,8 +131,7 @@ def client():
     global clock
     clock += 1
     word = random.choice(list(australian_animals))  # Convert set to list for random.choice
-    message = port, word, clock
-    print(message)
+    message = hostname, word, clock
     send_data = pickle.dumps(message)
     sending_message(send_data)
 
