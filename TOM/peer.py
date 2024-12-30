@@ -142,7 +142,7 @@ if __name__ == "__main__":
         sys.exit(1)  
 
     hostname = sys.argv[1]  # Get hostname from arguments
-    port = random.randint(50000, 50211)
+    port = 55555
     peers = sys.argv[1:]
     peers = set(map(str, peers))
     log = logs(hostname)
