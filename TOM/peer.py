@@ -91,10 +91,7 @@ def handle_connection(client: socket.socket,  client_address, logger):
 
         heapq.heappush(priority_queue, (receiv_clock, (ip_peer, word)))
         #logger.info(f"Server: message from host {client_address} [command = {received_word}]")
-
-        ips = set(map(lambda values: values[1][0], priority_queue))
-        if peers.issubset(ips):
-            print_message()
+        print_message()
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling   
 
@@ -119,16 +116,19 @@ def sending_message(message, retry_delay=4):
 
 
 def print_message():
-    while len(priority_queue) > 0:
-        value = heapq.heappop(priority_queue)
-        if value[1][1] != 'ack':
-            print(value)
-        
+    ips = set(map(lambda values: values[1][0], priority_queue))
+    if peers.issubset(ips):
+        while len(priority_queue) > 0:
+            value = heapq.heappop(priority_queue)
+            if value[1][1] != 'ack':
+                print(value)
+            
 def client():
     global clock
     clock += 1
     word = random.choice(list(australian_animals))  # Convert set to list for random.choice
     message = port, word, clock
+    print(message)
     send_data = pickle.dumps(message)
     sending_message(send_data)
 
