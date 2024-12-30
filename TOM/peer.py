@@ -81,8 +81,6 @@ def handle_connection(client: socket.socket,  client_address, logger):
         ip_peer, word, receiv_clock = received_word
         clock = max(node.clock, receiv_clock) + 1
 
-        print(clock)
-
         '''bleat to everyone'''
         if word != 'ack':
             ack = pickle.dumps((node.hostname, 'ack', clock))
