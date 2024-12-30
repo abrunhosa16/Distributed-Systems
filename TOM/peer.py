@@ -80,7 +80,7 @@ def handle_connection(client: socket.socket,  client_address, logger):
         msg: str = client.recv(1024)
         received_word = pickle.loads(msg)  # load the dict that came from another peer.
         ip_peer, word, receiv_clock = received_word
-        clock = max(clock, receiv_clock) + 1
+        clock = max(node.clock, receiv_clock) + 1
 
         '''bleat to everyone'''
         if word != 'ack':
@@ -94,13 +94,13 @@ def handle_connection(client: socket.socket,  client_address, logger):
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling   
 
 def sending_message(message, retry_delay=4):
-    for peer in peers:
+    for peer in node.peers:
         attempts = 0
         while attempts < 3:
             try:
                 logging.info(f"{message} sent to {peer}, attempt {attempts + 1}")
                 next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                next_sock.connect((peer, port))
+                next_sock.connect((peer, node.port))
                 next_sock.sendall(message)
                 next_sock.close()
                 break
@@ -122,10 +122,9 @@ def print_message():
                 print(value)
             
 def client():
-    global clock
-    clock += 1
+    node.clock += 1
     word = random.choice(list(portuguese_cities))  # Convert set to list for random.choice
-    message = hostname, word, clock
+    message = node.hostname, word, node.clock
     send_data = pickle.dumps(message)
     sending_message(send_data)
 
@@ -154,5 +153,5 @@ if __name__ == "__main__":
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     periodic_send()
-    server_run(hostname, port, node.logger)
+    server_run(node.hostname, node.port, node.logger)
 
