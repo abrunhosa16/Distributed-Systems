@@ -82,6 +82,8 @@ def handle_connection(client: socket.socket,  client_address, logger):
         ip_peer, word, receiv_clock = received_word
         clock = max(node.clock, receiv_clock) + 1
 
+        print(received_word)
+
         '''bleat to everyone'''
         if word != 'ack':
             ack = pickle.dumps((port, 'ack', clock))
@@ -96,7 +98,7 @@ def handle_connection(client: socket.socket,  client_address, logger):
 def sending_message(message, retry_delay=4):
     for peer in node.peers:
         attempts = 0
-        while attempts < 3:
+        while attempts < 10:
             try:
                 logging.info(f"{message} sent to {peer}, attempt {attempts + 1}")
                 next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -107,10 +109,7 @@ def sending_message(message, retry_delay=4):
             except Exception as e:
                 attempts += 1
                 logging.error(f"Attempt {attempts} failed to connect to {peer}: {e}")
-                if attempts < 3:
-                    time.sleep(retry_delay)  # Wait before retrying
-                else:
-                    logging.error(f"Failed to connect to {peer} after 3 attempts.")
+                time.sleep(retry_delay)  # Wait before retrying
 
 
 def print_message():
