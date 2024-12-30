@@ -70,10 +70,6 @@ def dictionary_operations(dic: dict[str, float], server_port: int) -> dict[str, 
     # Adiciona o servidor atual com o tempo atual
     cop[server_port] = current_time
     
-    # Exibe a diferença de tempo para cada chave
-    for key, value in dic.items():
-        print(f"{key}: {current_time - value}")
-    
     return cop
 
 def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logger):
@@ -111,7 +107,6 @@ def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logg
 # Function to handle individual client connections
 def handle_connection(client: socket.socket, client_address: str, neighboors: set[int], logger: logging.Logger, server_port:int):
     global my_set  # Declare my_set as global
-
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
@@ -121,28 +116,39 @@ def handle_connection(client: socket.socket, client_address: str, neighboors: se
         print(f"{received_set} received from {client_address}")
 
         my_set = merge_set(my_set, received_set)
-        
-        delay = delay_poisson(2)
-        time.sleep(delay)
-
-
-        my_set = dictionary_operations(my_set, server_port) 
-        send_data = pickle.dumps(my_set) # preparing dict to send for the neighboors
-        
-        # Creating connection with all neighboors
-        '''Probably i need to put a exception here, and is important put more logs.'''
-        for port_peer in neighboors:
-            try:
-                print(f"{my_set} sended to {port_peer}")
-                next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-                next.connect((hostname, port_peer))
-                next.sendall(send_data)
-            except Exception as e:
-                logging.error(f"Error trying connect: {e} {port_peer}")
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
-   
+
+
+def start_anti_entropy():
+    """
+    Periodically updates the peer map using Anti-Entropy.
+    """
+    def anti_entropy_cycle():
+        while True:
+            delay = delay_poisson(4)
+            print(delay)
+            time.sleep(delay)
+            gossiping_message()
+
+    threading.Thread(target=anti_entropy_cycle, daemon=True).start()
+
+
+def gossiping_message():
+    global my_set
+    my_set = dictionary_operations(my_set, port)
+    send_data = pickle.dumps(my_set)
+    print(neighboors)
+    for neigh in neighboors:
+        try:
+            print(f"{my_set} sended to {neigh}")
+            next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+            next.connect((hostname, neigh))
+            next.sendall(send_data)
+        except Exception as e:
+            logging.error(f"Error trying connect: {e} {neigh}")
+
 
 if __name__ == "__main__":
     import sys
@@ -159,6 +165,7 @@ if __name__ == "__main__":
 
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
+    start_anti_entropy()
     server_run(hostname, port, neighboors, log.logger)
 
 

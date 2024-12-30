@@ -77,10 +77,6 @@ def dictionary_operations(dic: dict[str, float], server_port: int) -> dict[str, 
     return cop
 
 
-
-
-
-
 def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logger):
     global my_set
 
