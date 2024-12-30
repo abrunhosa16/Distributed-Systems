@@ -98,17 +98,25 @@ def handle_connection(client: socket.socket,  client_address, logger):
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling   
 
-def sending_message(message):
-    try:
-        for peer in peers:
-            logging.info(f"{message} sended to {peer}")
-            next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-            next.connect((peer, port))
-            next.sendall(message)
+def sending_message(message, retry_delay=4):
+    for peer in peers:
+        attempts = 0
+        while attempts < 3:
+            try:
+                logging.info(f"{message} sent to {peer}, attempt {attempts + 1}")
+                next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                next_sock.connect((peer, port))
+                next_sock.sendall(message)
+                next_sock.close()
+                break
+            except Exception as e:
+                attempts += 1
+                logging.error(f"Attempt {attempts} failed to connect to {peer}: {e}")
+                if attempts < 3:
+                    time.sleep(retry_delay)  # Wait before retrying
+                else:
+                    logging.error(f"Failed to connect to {peer} after 3 attempts.")
 
-    except Exception as e:
-        print(f"Error sending message: {e}")
-        logging.error(f"Error trying connect: {e} {peer}")
 
 def print_message():
     while len(priority_queue) > 0:
