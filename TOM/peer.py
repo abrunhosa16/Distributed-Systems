@@ -74,7 +74,6 @@ def server_run(host: str, port: int, logger: logging.Logger):
 
 # Function to handle individual client connections
 def handle_connection(client: socket.socket,  client_address, logger):
-    global clock
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
@@ -86,7 +85,7 @@ def handle_connection(client: socket.socket,  client_address, logger):
 
         '''bleat to everyone'''
         if word != 'ack':
-            ack = pickle.dumps((port, 'ack', clock))
+            ack = pickle.dumps((node.hostname, 'ack', clock))
             sending_message(ack)
 
         heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
