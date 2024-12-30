@@ -35,7 +35,13 @@ australian_animals = {
     "numbat",
     "tree_kangaroo",
     "spotted_quoll",
-    "thorny_devil"
+    "thorny_devil",
+    "Eva",
+    "Vini",
+    "Vicente",
+    "Carneiro",
+    "Queijo de ovelha",
+
 }
 
 def poisson_delay(lambda_:int):
