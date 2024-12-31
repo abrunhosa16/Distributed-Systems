@@ -195,6 +195,7 @@ if __name__ == "__main__":
 
     # Wait until all peers are ready
     periodic_send()
+    server_run(node)
 
 
     #print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
