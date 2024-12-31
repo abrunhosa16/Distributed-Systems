@@ -94,19 +94,17 @@ def handle_connection(client: socket.socket,  client_address, logger):
 
 def sending_message(message, retry_delay=4):
     for peer in node.peers:
-        attempts = 0
-        while attempts < 10:
-            try:
-                logging.info(f"{message} sent to {peer}, attempt {attempts + 1}")
-                next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                next_sock.connect((peer, node.port))
-                next_sock.sendall(message)
-                next_sock.close()
-                break
-            except Exception as e:
-                attempts += 1
-                logging.error(f"Attempt {attempts} failed to connect to {peer}: {e}")
-                time.sleep(retry_delay)  # Wait before retrying
+        
+        try:
+            logging.info(f"{message} sent to {peer}, attempt {0 + 1}")
+            next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            next_sock.connect((peer, node.port))
+            next_sock.sendall(message)
+            next_sock.close()
+            break
+        except Exception as e:
+            logging.error(f"Attempt {'a'} failed to connect to {peer}: {e}")
+            time.sleep(retry_delay)  # Wait before retrying
 
 
 def print_message():
