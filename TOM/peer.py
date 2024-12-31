@@ -62,9 +62,8 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
 
         # Check if it's a "ready" message
         if isinstance(received_data[1], str) and received_data[1] == "ready":
-            with lock:
-                node.ready_peers.add(received_data[0])
-                node.logger.info(f"Received 'ready' message from {client_address}")
+            node.ready_peers.add(received_data[0])
+            node.logger.info(f"Received 'ready' message from {client_address}")
             
 
         # Handle regular messages
@@ -116,7 +115,6 @@ def print_message():
                 print(mes_clock, msg_info)
 
 
-     
 def client():
     global lock
     with lock:
