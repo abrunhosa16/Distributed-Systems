@@ -77,29 +77,31 @@ def server_run(node: PeerNode):
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
-# Function to handle individual client connections
-def handle_connection(client: socket.socket, node:PeerNode, client_address):
-    global lock
+def handle_connection(client: socket.socket, node: PeerNode, client_address):
     try:
-        # Create input streams for the client connection
-        msg: str = client.recv(1024)
-        received_word = pickle.loads(msg)
-        ip_peer, word, receiv_clock = received_word
+        msg = client.recv(1024)
+        received_data = pickle.loads(msg)
 
-        with lock: 
+        # Check if it's a "ready" message
+        if isinstance(received_data, str) and received_data == "ready":
+            with lock:
+                node.ready_peers.add(client_address)
+                node.logger.info(f"Received 'ready' message from {client_address}")
+            return
+
+        # Handle regular messages
+        ip_peer, word, receiv_clock = received_data
+        with lock:
             node.clock = max(node.clock, receiv_clock) + 1
+            if word != 'ack':
+                ack = pickle.dumps((node.hostname, 'ack', node.clock))
+                sending_message(ack)
 
-        '''bleat to everyone'''
-        if word != 'ack':
-            ack = pickle.dumps((node.hostname, 'ack', node.clock))
-            sending_message(ack)
-
-        with lock: 
             heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
-        #logger.info(f"Server: message from host {client_address} [command = {received_word}]")
-        print_message()
+            print_message()
     except Exception as e:
-        logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling   
+        node.logger.error(f"Error handling connection from {client_address}: {e}")
+ 
 
 def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
     for peer in node.peers:
