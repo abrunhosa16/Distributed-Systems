@@ -94,7 +94,6 @@ def handle_connection(client: socket.socket,  client_address, logger):
 
 def sending_message(message, retry_delay=4):
     for peer in node.peers:
-        
         try:
             logging.info(f"{message} sent to {peer}, attempt {0 + 1}")
             next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -147,6 +146,7 @@ if __name__ == "__main__":
     node = PeerNode(hostname= hostname, port=port, peers=peers)
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
-    periodic_send()
     server_run(node.hostname, node.port, node.logger)
+    time.sleep(3)
+    periodic_send()
 
