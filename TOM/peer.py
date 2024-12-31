@@ -129,9 +129,10 @@ def print_message():
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
             mes_clock, msg_info = heapq.heappop(node.priority_queue)
-            processed.add(mes_clock)
-            if msg_info[1] != 'ack' and msg_info[1] not in processed:
-                print(mes_clock, msg_info)
+            if msg_info[1] != 'ack':
+                if mes_clock not in processed:
+                    processed.add(mes_clock)
+                    print(mes_clock, msg_info)
 
      
 def client():
