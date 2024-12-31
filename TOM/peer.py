@@ -6,6 +6,7 @@ import math
 import heapq
 import pickle
 import time 
+lock = threading.Lock()
 
 portuguese_cities = ["Lisboa",
     "Porto",
@@ -74,25 +75,23 @@ def server_run(node: PeerNode):
 
 # Function to handle individual client connections
 def handle_connection(client: socket.socket, node:PeerNode, client_address):
+    global lock
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
-
-        
-        try:
-            received_word = pickle.loads(msg)
-        except Exception as e:
-            node.logger.error(f"Failed to deserialize message: {e}")
-            
+        received_word = pickle.loads(msg)
         ip_peer, word, receiv_clock = received_word
-        node.clock = max(node.clock, receiv_clock) + 1
+
+        with lock: 
+            node.clock = max(node.clock, receiv_clock) + 1
 
         '''bleat to everyone'''
         if word != 'ack':
             ack = pickle.dumps((node.hostname, 'ack', node.clock))
             sending_message(ack)
 
-        heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
+        with lock: 
+            heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
         #logger.info(f"Server: message from host {client_address} [command = {received_word}]")
         print_message()
     except Exception as e:
@@ -132,7 +131,6 @@ def print_message():
             if value[1][1] != 'ack':
                 print(value)
 
-lock = threading.Lock()
      
 def client():
     global lock
