@@ -81,8 +81,6 @@ def handle_connection(client: socket.socket,  client_address, logger):
         ip_peer, word, receiv_clock = received_word
         node.clock = max(node.clock, receiv_clock) + 1
 
-        print(word)
-
         '''bleat to everyone'''
         if word != 'ack':
             ack = pickle.dumps((node.hostname, 'ack', node.clock))
@@ -113,7 +111,7 @@ def sending_message(message, retry_delay=4):
 
 def print_message():
     ips = set(map(lambda values: values[1][0], node.priority_queue))
-    while peers.issubset(ips):
+    while ips.issubset(node.peers):
         value = heapq.heappop(node.priority_queue)
         if value[1][1] != 'ack':
             print(value)
