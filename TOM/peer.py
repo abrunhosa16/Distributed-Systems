@@ -173,7 +173,7 @@ def wait_for_peers(node:PeerNode):
     while True:
         with lock:
             if node.ready_peers == node.peers:
-                print("All peers are ready. Starting communication...")
+                #print("All peers are ready. Starting communication...")
                 periodic_send()
 
         time.sleep(1)  # Check periodically
