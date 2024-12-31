@@ -120,7 +120,6 @@ def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
 
 def print_message():
     ips = set(map(lambda values: values[1][0], node.priority_queue))
-    print(ips)
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
             value = heapq.heappop(node.priority_queue)
