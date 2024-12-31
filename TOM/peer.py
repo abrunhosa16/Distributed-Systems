@@ -10,30 +10,8 @@ lock = threading.Lock()
 processed = set()
 
 
-portuguese_cities = ["Lisboa",
-    "Porto",
-    "Coimbra",
-    "Braga",
-    "Aveiro",
-    "Faro",
-    "Serra da Estrela",
-    "Guimarães",
-    "Viseu",
-    "Leiria",
-    "Vale de Cambra",
-    "Sintra",
-    "Viana do Castelo",
-    "Tondela",
-    "Guarda",
-    "Caldas da Rainha",
-    "Covilhã",
-    "Bragança",
-    "Óbidos",
-    "Vinhais",
-    "Mirandela",
-    "Freixo de Espada à Cinta",
-    "Peniche"]
-
+portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
+    
 class PeerNode:
     def __init__(self, hostname, port, peers):
         self.hostname = hostname
@@ -146,7 +124,6 @@ def client():
         word = random.choice(list(portuguese_cities))  # Convert set to list for random.choice
         message = node.hostname, word, node.clock
         send_data = pickle.dumps(message)
-        
         sending_message(send_data)
 
 
@@ -167,10 +144,10 @@ def send_ready_message(node: PeerNode):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((peer, node.port))
                     sock.sendall(ready_message)
-                    time.sleep(1)
 
             except Exception as e:
                 node.logger.warning(f"Failed to send 'ready' message to {peer}: {e}")
+                time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -193,7 +170,6 @@ if __name__ == "__main__":
 
     # Wait until all peers are ready
     periodic_send()
-    server_run(node)
 
 
     #print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
