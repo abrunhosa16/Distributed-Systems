@@ -131,7 +131,6 @@ def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
 
 def print_message():
     ips = set(map(lambda ip: ip[1][0], node.priority_queue))
-    print(node.priority_queue)
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
             mes_clock, msg_info = heapq.heappop(node.priority_queue)
@@ -176,6 +175,7 @@ def wait_for_peers(node:PeerNode):
             if node.ready_peers == node.peers:
                 print("All peers are ready. Starting communication...")
                 periodic_send()
+                break
         time.sleep(1)  # Check periodically
 
 
