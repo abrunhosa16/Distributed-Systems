@@ -67,13 +67,13 @@ def server_run(node: PeerNode):
             #logger.info(f"Server: new connection from {client_address[0]}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, node.logger)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, node, client_address)).start()
         
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 # Function to handle individual client connections
-def handle_connection(client: socket.socket, node:PeerNode, client_address, logger):
+def handle_connection(client: socket.socket, node:PeerNode, client_address):
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
