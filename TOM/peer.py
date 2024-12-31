@@ -78,6 +78,7 @@ def handle_connection(client: socket.socket,  client_address, logger):
         # Create input streams for the client connection
         msg: str = client.recv(1024)
         received_word = pickle.loads(msg)  # load the dict that came from another peer.
+        print(received_word)
         ip_peer, word, receiv_clock = received_word
         node.clock = max(node.clock, receiv_clock) + 1
 
