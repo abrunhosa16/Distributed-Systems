@@ -174,8 +174,7 @@ def wait_for_peers(node:PeerNode):
         with lock:
             if node.ready_peers == node.peers:
                 print("All peers are ready. Starting communication...")
-                periodic_send()
-                break
+                return
         time.sleep(1)  # Check periodically
 
 
@@ -199,7 +198,7 @@ if __name__ == "__main__":
 
     # Wait until all peers are ready
     wait_for_peers(node)
-    #periodic_send()
+    periodic_send()
 
 
     #print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
