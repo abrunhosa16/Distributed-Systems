@@ -134,7 +134,6 @@ def print_message():
             if msg_info[1] != 'ack':
                 if mes_clock not in processed:
                     processed.add(mes_clock)
-                    print(processed)
                     print(mes_clock, msg_info)
 
      
