@@ -92,7 +92,7 @@ def handle_connection(client: socket.socket, node:PeerNode, client_address):
             ack = pickle.dumps((node.hostname, 'ack', node.clock))
             sending_message(ack)
 
-        heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
+        heapq.heappush(node.priority_queue, (receiv_clock, ip_peer, word))
         #logger.info(f"Server: message from host {client_address} [command = {received_word}]")
         print_message()
     except Exception as e:
@@ -128,9 +128,11 @@ def print_message():
     ips = set(map(lambda values: values[1][0], node.priority_queue))
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
-            value = heapq.heappop(node.priority_queue)
-            if value[1][1] != 'ack':
-                print(value)
+            # value = heapq.heappop(node.priority_queue)
+            clock, peer, message = heapq.heappop(node.priority_queue)
+
+            if message != 'ack':
+                print(clock, peer, message)
 
 lock = threading.Lock()
      
