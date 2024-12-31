@@ -52,9 +52,9 @@ class PeerNode:
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / lambda_
 
-def server_run(host: str, port: int, logger: logging.Logger):
+def server_run(node: PeerNode):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    server.bind((host, port))
+    server.bind((node.hostname, node.port))
     server.listen()
     #logger.info(f"Server: endpoint running at port {port} ...")  # Log server startup
 
@@ -67,13 +67,13 @@ def server_run(host: str, port: int, logger: logging.Logger):
             #logger.info(f"Server: new connection from {client_address[0]}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, logger)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, node.logger)).start()
         
         except Exception as e:
-            logger.error(f"Error accepting connection: {e}")  # Log any connection errors
+            node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 # Function to handle individual client connections
-def handle_connection(client: socket.socket,  client_address, logger):
+def handle_connection(client: socket.socket, node:PeerNode, client_address, logger):
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
@@ -158,5 +158,5 @@ if __name__ == "__main__":
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     periodic_send()
-    server_run(node.hostname, node.port, node.logger)
+    server_run(node)
 
