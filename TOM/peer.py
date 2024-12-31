@@ -129,7 +129,7 @@ def print_message():
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
             mes_clock, msg_info = heapq.heappop(node.priority_queue)
-            processed.append(mes_clock)
+            processed.add(mes_clock)
             if msg_info[1] != 'ack' and msg_info[1] not in processed:
                 print(msg_info[1])
 
