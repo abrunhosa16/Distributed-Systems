@@ -41,6 +41,8 @@ class PeerNode:
         self.peers = set(peers)
         self.priority_queue = []
         self.clock = 0
+        self.ready_peers = set()  # To track "ready" peers
+
         self.logger = self._setup_logger()
 
     def _setup_logger(self):
