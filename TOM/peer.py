@@ -92,18 +92,30 @@ def handle_connection(client: socket.socket,  client_address, logger):
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling   
 
-def sending_message(message, retry_delay=4):
+def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
     for peer in node.peers:
-        try:
-            logging.info(f"{message} sent to {peer}, attempt {0 + 1}")
-            next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            next_sock.connect((peer, node.port))
-            next_sock.sendall(message)
-            next_sock.close()
-            break
-        except Exception as e:
-            logging.error(f"Attempt {'a'} failed to connect to {peer}: {e}")
-            time.sleep(retry_delay)  # Wait before retrying
+        attempts = 0
+        while attempts < max_retries:
+            try:
+                # Use a context manager to ensure the socket is closed
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_sock:
+                    logging.info(f"Attempting to connect to {peer}, try {attempts + 1}")
+                    next_sock.connect((peer, node.port))
+                    next_sock.sendall(message)
+                    logging.info(f"Message sent successfully to {peer}")
+                    break  # Exit the retry loop on successful send
+            except socket.error as e:
+                attempts += 1
+                logging.warning(f"Attempt {attempts} failed for {peer}: {e}")
+                
+                if attempts < max_retries:
+                    # Calculate backoff time (capped)
+                    backoff = min(retry_delay * (2 ** attempts), max_backoff)
+                    logging.info(f"Retrying in {backoff:.1f} seconds...")
+                    time.sleep(backoff)
+                else:
+                    logging.error(f"Failed to send message to {peer} after {max_retries} attempts.")
+
 
 
 def print_message():
@@ -126,7 +138,7 @@ def client():
 def periodic_send():
     def delay_poisson_messages():
         while True:
-            delay = poisson_delay(1/20)
+            delay = poisson_delay(1)
             time.sleep(delay)
             client()
     threading.Thread(target=delay_poisson_messages, daemon=True).start()
