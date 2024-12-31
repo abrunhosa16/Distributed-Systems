@@ -191,12 +191,6 @@ if __name__ == "__main__":
 
     send_ready_message(node)
 
-    while 
-        print('ainda nao')
-        print(node.ready_peers)
-        time.sleep(1)
-    
-
     # Wait until all peers are ready
     periodic_send()
     server_run(node)
