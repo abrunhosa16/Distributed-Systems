@@ -7,6 +7,8 @@ import heapq
 import pickle
 import time 
 lock = threading.Lock()
+processed = set()
+
 
 portuguese_cities = ["Lisboa",
     "Porto",
@@ -124,7 +126,7 @@ def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
 
 
 def print_message():
-    processed = set()
+    global processed
     ips = set(map(lambda ip: ip[1][0], node.priority_queue))
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
