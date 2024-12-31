@@ -192,13 +192,16 @@ if __name__ == "__main__":
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, port=port_, peers=peers_)
 
+    print(f"Node initialized at {hostname_}:{port_}")
+    threading.Thread(target=server_run, args=(node,), daemon=True).start()
+
     send_ready_message(node)
 
     # Wait until all peers are ready
     wait_for_peers(node)
 
 
-    print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
+    #print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
     periodic_send()
-    server_run(node)
+    #server_run(node)
 
