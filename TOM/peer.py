@@ -65,7 +65,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
             with lock:
                 node.ready_peers.add(received_data[0])
                 node.logger.info(f"Received 'ready' message from {client_address}")
-            return
+            
 
         # Handle regular messages
         ip_peer, word, receiv_clock = received_data
