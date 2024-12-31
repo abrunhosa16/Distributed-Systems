@@ -152,7 +152,7 @@ def client():
 
 def periodic_send():
     def delay_poisson_messages():
-        while node.ready_peers == node.peers :
+        while True:
             delay = poisson_delay(1)
             time.sleep(delay)
             client()
@@ -187,6 +187,9 @@ if __name__ == "__main__":
     threading.Thread(target=server_run, args=(node,), daemon=True).start()
 
     send_ready_message(node)
+
+    while node.peers != node.ready_peers:
+        pass
 
     # Wait until all peers are ready
     periodic_send()
