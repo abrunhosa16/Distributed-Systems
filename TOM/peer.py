@@ -134,6 +134,7 @@ def print_message():
             if msg_info[1] != 'ack':
                 print(mes_clock, msg_info)
 
+
      
 def client():
     global lock
@@ -155,6 +156,28 @@ def periodic_send():
     threading.Thread(target=delay_poisson_messages, daemon=True).start()
 
 
+def send_ready_message(node):
+    ready_message = pickle.dumps("ready")
+    for peer in node.peers:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((peer, node.port))
+                sock.sendall(ready_message)
+              #  node.logger.info(f"Sent 'ready' message to {peer}")
+        except Exception as e:
+            node.logger.warning(f"Failed to send 'ready' message to {peer}: {e}")
+
+def wait_for_peers(node):
+    while True:
+        with lock:
+            if node.ready_peers == node.peers:
+                node.logger.info("All peers are ready. Starting communication...")
+                break
+        time.sleep(1)  # Check periodically
+
+
+
+
 if __name__ == "__main__":
     import sys
 
@@ -167,6 +190,11 @@ if __name__ == "__main__":
     peers_ = sys.argv[1:]
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, port=port_, peers=peers_)
+
+    send_ready_message(node)
+
+    # Wait until all peers are ready
+    wait_for_peers(node)
 
 
     print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
