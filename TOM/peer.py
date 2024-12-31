@@ -126,15 +126,13 @@ def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
 
 
 def print_message():
-    global processed
     ips = set(map(lambda ip: ip[1][0], node.priority_queue))
+    print(node.priority_queue)
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
             mes_clock, msg_info = heapq.heappop(node.priority_queue)
             if msg_info[1] != 'ack':
-                if mes_clock not in processed:
-                    processed.add(mes_clock)
-                    print(mes_clock, msg_info)
+                print(mes_clock, msg_info)
 
      
 def client():
