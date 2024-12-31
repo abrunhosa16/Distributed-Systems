@@ -160,14 +160,17 @@ def periodic_send():
 
 
 def send_ready_message(node: PeerNode):
-    ready_message = pickle.dumps((node.hostname,"ready"))
-    for peer in node.peers:
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((peer, node.port))
-                sock.sendall(ready_message)
-        except Exception as e:
-            node.logger.warning(f"Failed to send 'ready' message to {peer}: {e}")
+    while node.peers != node.ready_peers:
+        ready_message = pickle.dumps((node.hostname,"ready"))
+        for peer in node.peers:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.connect((peer, node.port))
+                    sock.sendall(ready_message)
+                    time.sleep(1)
+
+            except Exception as e:
+                node.logger.warning(f"Failed to send 'ready' message to {peer}: {e}")
 
 
 if __name__ == "__main__":
@@ -188,7 +191,7 @@ if __name__ == "__main__":
 
     send_ready_message(node)
 
-    while node.peers != node.ready_peers:
+    while 
         print('ainda nao')
         print(node.ready_peers)
         time.sleep(1)
