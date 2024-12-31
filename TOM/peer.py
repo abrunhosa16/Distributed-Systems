@@ -91,7 +91,6 @@ def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
                     next_sock.connect((peer, node.port))
                     next_sock.sendall(message)
                     logging.info(f"Message sent successfully to {peer}")
-                    break  # Exit the retry loop on successful send
             except socket.error as e:
                 attempts += 1
                 logging.warning(f"Attempt {attempts} failed for {peer}: {e}")
