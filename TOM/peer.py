@@ -152,7 +152,7 @@ def client():
 
 def periodic_send():
     def delay_poisson_messages():
-        while True:
+        while node.ready_peers == node.peers :
             delay = poisson_delay(1)
             time.sleep(delay)
             client()
@@ -168,15 +168,6 @@ def send_ready_message(node: PeerNode):
                 sock.sendall(ready_message)
         except Exception as e:
             node.logger.warning(f"Failed to send 'ready' message to {peer}: {e}")
-
-def wait_for_peers(node:PeerNode):
-    while True:
-        with lock:
-            if node.ready_peers == node.peers:
-                #print("All peers are ready. Starting communication...")
-                periodic_send()
-
-        time.sleep(1)  # Check periodically
 
 
 if __name__ == "__main__":
@@ -198,7 +189,7 @@ if __name__ == "__main__":
     send_ready_message(node)
 
     # Wait until all peers are ready
-    wait_for_peers(node)
+    periodic_send()
 
 
     #print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
