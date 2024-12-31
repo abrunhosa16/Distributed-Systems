@@ -78,7 +78,6 @@ def handle_connection(client: socket.socket,  client_address, logger):
         # Create input streams for the client connection
         msg: str = client.recv(1024)
         received_word = pickle.loads(msg)  # load the dict that came from another peer.
-        print(received_word)
         ip_peer, word, receiv_clock = received_word
         node.clock = max(node.clock, receiv_clock) + 1
 
@@ -112,10 +111,11 @@ def sending_message(message, retry_delay=4):
 
 def print_message():
     ips = set(map(lambda values: values[1][0], node.priority_queue))
-    while ips.issubset(node.peers):
-        value = heapq.heappop(node.priority_queue)
-        if value[1][1] != 'ack':
-            print(value)
+    if ips.issubset(node.peers):
+        while len(node.priority_queue) > 0:
+            value = heapq.heappop(node.priority_queue)
+            if value[1][1] != 'ack':
+                print(value)
             
 def client():
     node.clock += 1
