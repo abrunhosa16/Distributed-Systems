@@ -83,7 +83,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
         received_data = pickle.loads(msg)
 
         # Check if it's a "ready" message
-        if isinstance(received_data, str) and received_data[1] == "ready":
+        if isinstance(received_data[1], str) and received_data[1] == "ready":
             with lock:
                 node.ready_peers.add(received_data[0])
                 node.logger.info(f"Received 'ready' message from {client_address}")
