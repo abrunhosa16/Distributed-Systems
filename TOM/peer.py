@@ -168,8 +168,10 @@ if __name__ == "__main__":
 
     # Wait until all peers are ready
     periodic_send()
+    node.port = port_+1
+
 
 
     #print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
-    #server_run(node)
+    server_run(node)
 
