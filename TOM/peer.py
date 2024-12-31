@@ -77,7 +77,13 @@ def handle_connection(client: socket.socket, node:PeerNode, client_address):
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
-        received_word = pickle.loads(msg)  # load the dict that came from another peer.
+
+        
+        try:
+            received_word = pickle.loads(msg)
+        except Exception as e:
+            node.logger.error(f"Failed to deserialize message: {e}")
+            
         ip_peer, word, receiv_clock = received_word
         node.clock = max(node.clock, receiv_clock) + 1
 
@@ -125,13 +131,18 @@ def print_message():
             value = heapq.heappop(node.priority_queue)
             if value[1][1] != 'ack':
                 print(value)
-            
+
+lock = threading.Lock()
+     
 def client():
-    node.clock += 1
-    word = random.choice(list(portuguese_cities))  # Convert set to list for random.choice
-    message = node.hostname, word, node.clock
-    send_data = pickle.dumps(message)
-    sending_message(send_data)
+    global lock
+    with lock:
+        node.clock += 1
+        word = random.choice(list(portuguese_cities))  # Convert set to list for random.choice
+        message = node.hostname, word, node.clock
+        send_data = pickle.dumps(message)
+        
+        sending_message(send_data)
 
 
 def periodic_send():
