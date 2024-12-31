@@ -91,49 +91,44 @@ def handle_connection(client: socket.socket,  client_address, logger):
 
         heapq.heappush(priority_queue, (receiv_clock, (ip_peer, word)))
         #logger.info(f"Server: message from host {client_address} [command = {received_word}]")
-
-        ips = set(map(lambda values: values[1][0], priority_queue))
-        if peers.issubset(ips):
-            print_message()
+        print_message()
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling   
 
-
-def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
+def sending_message(message, retry_delay=4):
     for peer in peers:
         attempts = 0
-        while attempts < max_retries:
+        while attempts < 3:
             try:
-                # Use a context manager to ensure the socket is closed
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_sock:
-                    logging.info(f"Attempting to connect to {peer}, try {attempts + 1}")
-                    next_sock.connect((peer, port))
-                    next_sock.sendall(message)
-                    logging.info(f"Message sent successfully to {peer}")
-                    break  # Exit the retry loop on successful send
-            except socket.error as e:
+                logging.info(f"{message} sent to {peer}, attempt {attempts + 1}")
+                next_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                next_sock.connect((peer, port))
+                next_sock.sendall(message)
+                next_sock.close()
+                break
+            except Exception as e:
                 attempts += 1
-                logging.warning(f"Attempt {attempts} failed for {peer}: {e}")
-                
-                if attempts < max_retries:
-                    # Calculate backoff time (capped)
-                    backoff = min(retry_delay * (2 ** attempts), max_backoff)
-                    logging.info(f"Retrying in {backoff:.1f} seconds...")
-                    time.sleep(backoff)
+                logging.error(f"Attempt {attempts} failed to connect to {peer}: {e}")
+                if attempts < 3:
+                    time.sleep(retry_delay)  # Wait before retrying
                 else:
-                    logging.error(f"Failed to send message to {peer} after {max_retries} attempts.")
+                    logging.error(f"Failed to connect to {peer} after 3 attempts.")
+
 
 def print_message():
-    while len(priority_queue) > 0:
-        value = heapq.heappop(priority_queue)
-        if value[1][1] != 'ack':
-            print(value)
-        
+    ips = set(map(lambda values: values[1][0], priority_queue))
+    if peers.issubset(ips):
+        while len(priority_queue) > 0:
+            value = heapq.heappop(priority_queue)
+            if value[1][1] != 'ack':
+                print(value)
+            
 def client():
     global clock
     clock += 1
     word = random.choice(list(australian_animals))  # Convert set to list for random.choice
     message = port, word, clock
+    print(message)
     send_data = pickle.dumps(message)
     sending_message(send_data)
 
@@ -155,7 +150,7 @@ if __name__ == "__main__":
         sys.exit(1)  
 
     hostname = sys.argv[1]  # Get hostname from arguments
-    port = 55555  # Get port from arguments
+    port = 55555
     peers = sys.argv[1:]
     peers = set(map(str, peers))
     log = logs(hostname)
