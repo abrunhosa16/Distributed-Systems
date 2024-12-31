@@ -190,6 +190,7 @@ if __name__ == "__main__":
 
     while node.peers != node.ready_peers:
         print('ainda nao')
+        print(node.ready_peers)
         time.sleep(1)
     
 
