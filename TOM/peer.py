@@ -92,7 +92,7 @@ def handle_connection(client: socket.socket, node:PeerNode, client_address):
             ack = pickle.dumps((node.hostname, 'ack', node.clock))
             sending_message(ack)
 
-        heapq.heappush(node.priority_queue, (receiv_clock, ip_peer, word))
+        heapq.heappush(node.priority_queue, (receiv_clock, (ip_peer, word)))
         #logger.info(f"Server: message from host {client_address} [command = {received_word}]")
         print_message()
     except Exception as e:
@@ -125,14 +125,12 @@ def sending_message(message, retry_delay=2, max_retries=3, max_backoff=30):
 
 
 def print_message():
-    ips = set(map(lambda values: values[1][0], node.priority_queue))
+    ips = set(map(lambda ip: ip[1][0], node.priority_queue))
     if node.peers.issubset(ips):
         while len(node.priority_queue) > 0:
-            # value = heapq.heappop(node.priority_queue)
-            clock, peer, message = heapq.heappop(node.priority_queue)
-
-            if message != 'ack':
-                print(clock, peer, message)
+            value = heapq.heappop(node.priority_queue)
+            if value[1][1] != 'ack':
+                print(value)
 
 lock = threading.Lock()
      
@@ -160,16 +158,17 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) <= 3:
-        print("Usage: python peer.py <hostname> <port> <ports_peer>")
+        print("Usage: python peer.py <hostname> <host_peers>")
         sys.exit(1)  
 
-    hostname = sys.argv[1]  # Get hostname from arguments
-    port = 55555
-    peers = sys.argv[1:]
-    peers = set(map(str, peers))
-    node = PeerNode(hostname= hostname, port=port, peers=peers)
+    hostname_ = sys.argv[1]  # Get hostname from arguments
+    port_ = 55555
+    peers_ = sys.argv[1:]
+    peers_ = set(map(str, peers_))
+    node = PeerNode(hostname= hostname_, port=port_, peers=peers_)
 
-    print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
+
+    print(f"New server @ host={hostname_} - port={port_}")  # Inform user of peer initialization
     periodic_send()
     server_run(node)
 
