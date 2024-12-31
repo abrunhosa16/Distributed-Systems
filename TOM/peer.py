@@ -83,9 +83,9 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
         received_data = pickle.loads(msg)
 
         # Check if it's a "ready" message
-        if isinstance(received_data, str) and received_data == "ready":
+        if isinstance(received_data, str) and received_data[1] == "ready":
             with lock:
-                node.ready_peers.add(client_address)
+                node.ready_peers.add(received_data[0])
                 node.logger.info(f"Received 'ready' message from {client_address}")
             return
 
@@ -160,26 +160,23 @@ def periodic_send():
     threading.Thread(target=delay_poisson_messages, daemon=True).start()
 
 
-def send_ready_message(node):
-    ready_message = pickle.dumps("ready")
+def send_ready_message(node: PeerNode):
+    ready_message = pickle.dumps((node.hostname,"ready"))
     for peer in node.peers:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.connect((peer, node.port))
                 sock.sendall(ready_message)
-              #  node.logger.info(f"Sent 'ready' message to {peer}")
         except Exception as e:
             node.logger.warning(f"Failed to send 'ready' message to {peer}: {e}")
 
-def wait_for_peers(node):
+def wait_for_peers(node:PeerNode):
     while True:
         with lock:
             if node.ready_peers == node.peers:
-                node.logger.info("All peers are ready. Starting communication...")
+                print("All peers are ready. Starting communication...")
                 break
         time.sleep(1)  # Check periodically
-
-
 
 
 if __name__ == "__main__":
