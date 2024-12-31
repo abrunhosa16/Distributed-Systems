@@ -126,7 +126,7 @@ def client():
 def periodic_send():
     def delay_poisson_messages():
         while True:
-            delay = poisson_delay(1)
+            delay = poisson_delay(1/20)
             time.sleep(delay)
             client()
     threading.Thread(target=delay_poisson_messages, daemon=True).start()
@@ -146,7 +146,6 @@ if __name__ == "__main__":
     node = PeerNode(hostname= hostname, port=port, peers=peers)
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
-    server_run(node.hostname, node.port, node.logger)
-    time.sleep(3)
     periodic_send()
+    server_run(node.hostname, node.port, node.logger)
 
