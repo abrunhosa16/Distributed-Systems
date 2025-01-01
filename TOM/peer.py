@@ -173,7 +173,7 @@ if __name__ == "__main__":
         sys.exit(1)  
 
     hostname_ = sys.argv[1]  # Get hostname from arguments
-    peers_ = sys.argv[2:]
+    peers_ = sys.argv[1:]
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, peers=peers_)
 
