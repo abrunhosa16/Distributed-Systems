@@ -49,7 +49,6 @@ def server_run(node: PeerNode):
 
     while True:
         try:
-            server.settimeout(1)  # Set timeout to allow periodic checks for shutdown
             client_socket: socket.socket
             addr: tuple[str, int]
             client_socket, addr = server.accept()  # Accept a new client connection
@@ -57,9 +56,7 @@ def server_run(node: PeerNode):
 
             # Handle the connection in a separate thread
             threading.Thread(target=handle_connection, args=(client_socket, node, client_address)).start()
-        except socket.timeout:
-            continue
-        
+    
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
