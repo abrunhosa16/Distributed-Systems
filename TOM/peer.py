@@ -96,14 +96,13 @@ def propagate_shutdown(node: PeerNode):
     """Send a shutdown message to all peers and shut down the node."""
     shutdown_message = pickle.dumps((node.hostname, 'shutdown', node.clock))
     for peer in node.peers:
-        if peer != node.hostname:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect((peer, node.port))
-                    sock.sendall(shutdown_message)
-                    node.logger.info(f"Sent shutdown signal to {peer}")
-            except Exception as e:
-                node.logger.warning(f"Failed to send shutdown signal to {peer}: {e}")
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((peer, node.port))
+                sock.sendall(shutdown_message)
+                node.logger.info(f"Sent shutdown signal to {peer}")
+        except Exception as e:
+            node.logger.warning(f"Failed to send shutdown signal to {peer}: {e}")
     
     # Set the shutdown flag and log the event
     node.logger.info("Shutting down this peer")
