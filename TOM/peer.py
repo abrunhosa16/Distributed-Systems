@@ -31,12 +31,6 @@ class PeerNode:
         logger.addHandler(handler)
         return logger
 
-    def _client_sockets(self):
-        for peer in self.peers:
-            if peer not in self.client_sockets:
-                self.client_sockets[peer] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            return self.client_sockets
-
 
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / lambda_
@@ -174,7 +168,10 @@ if __name__ == "__main__":
     peers_ = sys.argv[1:]
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, peers=peers_)
-    node.client_sockets = node._client_sockets
+
+    for peer in node.peers:
+        node.client_sockets[peer] = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+
     print(node.client_sockets)
 
     print(f"Node initialized at {hostname_}:{node.port}")
