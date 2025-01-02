@@ -11,7 +11,7 @@ import signal
 portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
     
 class PeerNode:
-    def __init__(self, hostname: str, peers: set[int], port:int = 55551):
+    def __init__(self, hostname: str, peers: set[int], port:int = 55552):
         self.hostname = hostname
         self.port = port
         self.peers = peers
@@ -78,8 +78,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
 
         if word == 'shutdown':
             print('shut')
-            server.close()
-            client.close()
             sys.exit(0)
             return
 
