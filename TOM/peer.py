@@ -47,17 +47,18 @@ def server_run(node: PeerNode):
     server.bind((node.hostname, node.port))
     server.listen()
 
-    while True:
-        try:
-            client_socket: socket.socket
-            addr: tuple[str, int]
-            client_socket, addr = server.accept()  # Accept a new client connection
-            client_address: str = addr[0]  # Extract the client address
-            # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, node, client_address, server)).start()
-    
-        except Exception as e:
-            node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
+    try:
+        while not node.shutdown_flag.is_set():
+            try:
+                client_socket, addr = server.accept()
+                threading.Thread(target=handle_connection, args=(client_socket, node, addr[0], server)).start()
+            except socket.error as e:
+                if node.shutdown_flag.is_set():
+                    break
+                node.logger.error(f"Error accepting connection: {e}")
+    finally:
+        server.close()
+        node.logger.info("Server socket closed.")
 
 def handle_connection(client: socket.socket, node: PeerNode, client_address, server: socket):
     try:
@@ -73,7 +74,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
 
             return
             
-
         if word == 'ready':
             node.connected_peers.add(ip_peer)
             return  
