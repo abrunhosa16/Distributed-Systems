@@ -11,7 +11,7 @@ import signal
 portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
     
 class PeerNode:
-    def __init__(self, hostname: str, peers: set[int], port:int = 55554):
+    def __init__(self, hostname: str, peers: set[int], port:int = 55555):
         self.hostname = hostname
         self.port = port
         self.peers = peers
@@ -61,16 +61,21 @@ def server_run(node: PeerNode):
             addr: tuple[str, int]
             client_socket, addr = server.accept()  # Accept a new client connection
             client_address: str = addr[0]  # Extract the client address
+            msg = client_socket.recv(1024)
+            if not msg:
+                break
+
+
+
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, node, client_address, server)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, node, client_address, server, msg)).start()
     
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
-def handle_connection(client: socket.socket, node: PeerNode, client_address, server: socket):
+def handle_connection(client: socket.socket, node: PeerNode, client_address, server: socket, msg):
     try:
-        msg = client.recv(1024)
 
         received_data = pickle.loads(msg)
 
