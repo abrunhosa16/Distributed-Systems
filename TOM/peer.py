@@ -73,7 +73,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
             print('shut')
             node.connected_peers.clear()
             node.shutdown_flag.set()
-            print(node.connected_peers)
+            client.close()
             return 
             
         if word == 'ready':
