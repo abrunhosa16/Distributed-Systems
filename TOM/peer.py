@@ -123,6 +123,7 @@ def sending_message(message, max_attempts = 10):
                 client_socket.connect((peer, node.port))
                 client_socket.sendall(message)
                 logging.info(f"Message sent successfully to {peer}")
+                client_socket.close()
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
