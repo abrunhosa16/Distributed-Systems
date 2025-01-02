@@ -59,6 +59,7 @@ def server_run(node: PeerNode):
     finally:
         server.close()
         node.logger.info("Server socket closed.")
+        sys.exit(0)
 
 def handle_connection(client: socket.socket, node: PeerNode, client_address):
     try:
@@ -120,7 +121,7 @@ def sending_message(message, max_attempts = 10):
                 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client_socket.connect((peer, node.port))
                 client_socket.sendall(message)
-                logging.info(f"Message sent successfully to {peer}")
+                node.logger.info(f"Message sent successfully to {peer}")
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
@@ -161,7 +162,6 @@ def periodic_send(node: PeerNode):
                 time.sleep(0.4)
                 sending = node.hostname, 'ready', 0
                 sending_message(pickle.dumps(sending))
-        sys.exit(0)
             
     threading.Thread(target=send_poisson_messages, daemon=True).start()
 
