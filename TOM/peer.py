@@ -17,7 +17,7 @@ class PeerNode:
         self.priority_queue: heapq = [] # heap that acc words and acks
         self.clock: int = 0
         self.logger = self._setup_logger()
-        self.connected_peers: dict = dict()
+        self.connected_peers: set = set()
         self.shutdown_flag = threading.Event()  # Flag for clean shutdown
 
     def _setup_logger(self):
@@ -108,15 +108,16 @@ def sending_message(message, max_attempts = 10):
         attempts = 0
         while True:
             try:
+                client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                client_socket.connect((peer, node.port))
+                client_socket.sendall(message)
                 logging.info(f"Message sent successfully to {peer}")
 
                 if peer not in node.connected_peers:
-                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    node.connected_peers[peer] = client_socket
-                    client_socket.connect((peer, node.port))
+                    node.connected_peers.add(peer)
                     print(node.connected_peers)
 
-                client_socket.sendall(message)
+                client_socket.close()
                 break
             except socket.error as e:
                 attempts+=1
