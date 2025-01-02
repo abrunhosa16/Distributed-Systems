@@ -54,7 +54,7 @@ def server_run(node: PeerNode):
 
         except KeyboardInterrupt:
             print('interrupt')
-            server.close()a
+            server.close()
         
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
