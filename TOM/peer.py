@@ -78,7 +78,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
 
         if word == 'shutdown':
             print('shut')
-            server.close()
             sys.exit(0)
             
 
@@ -97,6 +96,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
         node.logger.error(f"Error handling connection from {client_address}: {e}")
 
     finally:
+        server.close()
         client.close()  # Always close the client socket
 
 
