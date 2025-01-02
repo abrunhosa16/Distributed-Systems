@@ -110,7 +110,6 @@ def sending_message(message, max_attempts = 10):
         attempts = 0
         while True:
             try:
-                node.client_sockets[peer].connect((peer, node.port))
                 node.client_sockets[peer].sendall(message)
                 logging.info(f"Message sent successfully to {peer}")
 
@@ -171,6 +170,8 @@ if __name__ == "__main__":
 
     for peer in node.peers:
         node.client_sockets[peer] = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        node.client_sockets[peer].connect((peer, node.port))
+
 
     print(node.client_sockets)
 
