@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     hostname = sys.argv[1]  # Get hostname from arguments
     next = sys.argv[2]
-    HOST_CALCULATOR = sys.argv([5])
+    HOST_CALCULATOR = sys.argv[5]
     log = logs(hostname)
 
 
