@@ -36,12 +36,11 @@ def signal_handler(sig, frame):
         shutdown_message = pickle.dumps((node.hostname, 'shutdown', node.clock))
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((node.hostname, peer))
+                sock.connect((peer, node.port))
                 sock.sendall(shutdown_message)
                 node.logger.info(f"Sent shutdown signal to {peer}")
         except Exception as e:
             node.logger.warning(f"Failed to send shutdown signal to {peer}: {e}")
-    sys.exit(0)
 
 # Vincular o manipulador ao sinal de interrupção (Ctrl+C)
 signal.signal(signal.SIGINT, signal_handler)
