@@ -6,14 +6,7 @@ import math
 import heapq
 import pickle
 import time 
-import signal
 
-def handle_exit(signal_received, frame):
-    print("\nShutting down...")
-    propagate_shutdown(node)
-    node.shutdown_flag.set()  # Signal threads and loops to stop
-    time.sleep(1)  # Allow time for threads to exit gracefully
-    sys.exit(0)
 
 portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
     
@@ -47,7 +40,7 @@ def server_run(node: PeerNode):
     server.bind((node.hostname, node.port))
     server.listen()
 
-    while not node.shutdown_flag.is_set():
+    while True:
         try:
             server.settimeout(1)  # Set timeout to allow periodic checks for shutdown
             client_socket: socket.socket
@@ -62,8 +55,6 @@ def server_run(node: PeerNode):
         
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
-    node.logger.info("Server shut down")
-    server.close()
 
 def handle_connection(client: socket.socket, node: PeerNode, client_address):
     try:
@@ -75,6 +66,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
 
         if word == 'shutdown':
             propagate_shutdown(node)
+            client.close()
             sys.exit(0)
 
         if word == 'ready':
@@ -154,17 +146,15 @@ def periodic_send(node: PeerNode):
     def send_poisson_messages():
         while not node.shutdown_flag.is_set():
             delay = poisson_delay(1)
+            print(node.connected_peers)
             if node.peers.issubset(node.connected_peers):
                 client(node)
                 time.sleep(delay)
-                print('nd')
             else:
-                time.sleep(0.2)
-                print('o que se passa')
+                time.sleep(0.4)
                 sending = node.hostname, 'ready', 0
                 sending_message(pickle.dumps(sending))
     threading.Thread(target=send_poisson_messages, daemon=True).start()
-
 
 
 if __name__ == "__main__":
@@ -178,10 +168,6 @@ if __name__ == "__main__":
     peers_ = sys.argv[1:]
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, peers=peers_)
-
-    # Handle shutdown signals
-    signal.signal(signal.SIGINT, handle_exit)
-    signal.signal(signal.SIGTERM, handle_exit)
 
     print(f"Node initialized at {hostname_}:{node.port}")
 
