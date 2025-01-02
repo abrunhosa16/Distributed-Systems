@@ -95,10 +95,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
     except Exception as e:
         node.logger.error(f"Error handling connection from {client_address}: {e}")
 
-    finally:
-        server.close()
-        client.close()  # Always close the client socket
-
 
 def propagate_shutdown(node: PeerNode):
     """Send a shutdown message to all peers and shut down the node."""
