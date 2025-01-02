@@ -99,7 +99,7 @@ def propagate_shutdown(node: PeerNode):
         if peer != node.hostname:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect((node.hostname, peer))
+                    sock.connect((peer, node.port))
                     sock.sendall(shutdown_message)
                     node.logger.info(f"Sent shutdown signal to {peer}")
             except Exception as e:
