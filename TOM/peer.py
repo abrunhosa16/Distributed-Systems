@@ -49,9 +49,12 @@ def server_run(node: PeerNode):
 
             # Handle the connection in a separate thread
             threading.Thread(target=handle_connection, args=(client_socket, node, client_address)).start()
+        except socket.timeout:
+            continue
+
         except KeyboardInterrupt:
-            print("\nEncerrando o servidor...")
-            server.close()
+            print('interrupt')
+            server.close()a
         
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
