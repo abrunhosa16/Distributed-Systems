@@ -6,6 +6,7 @@ import math
 import heapq
 import pickle
 import time 
+import signal
 
 portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
     
@@ -29,6 +30,13 @@ class PeerNode:
         logger.addHandler(handler)
         return logger
 
+def signal_handler(sig, frame):
+    print("\nSinal de interrupção recebido. Encerrando o servidor...")
+    sys.exit(0)
+
+# Vincular o manipulador ao sinal de interrupção (Ctrl+C)
+signal.signal(signal.SIGINT, signal_handler)
+
 
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / lambda_
@@ -51,10 +59,6 @@ def server_run(node: PeerNode):
             threading.Thread(target=handle_connection, args=(client_socket, node, client_address)).start()
         except socket.timeout:
             continue
-
-        except KeyboardInterrupt:
-            print('interrupt')
-            server.close()
         
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
