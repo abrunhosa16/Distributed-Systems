@@ -7,7 +7,6 @@ import heapq
 import pickle
 import time 
 
-
 portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
     
 class PeerNode:
@@ -116,6 +115,7 @@ def sending_message(message, max_attempts = 10):
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
+                    print(node.connected_peers)
                 break
             except socket.error as e:
                 attempts+=1
@@ -146,7 +146,6 @@ def periodic_send(node: PeerNode):
     def send_poisson_messages():
         while not node.shutdown_flag.is_set():
             delay = poisson_delay(1)
-            print(node.connected_peers)
             if node.peers.issubset(node.connected_peers):
                 client(node)
                 time.sleep(delay)
