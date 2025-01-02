@@ -3,8 +3,7 @@ import logging
 import threading
 
 PORT: int = 12345
-SERVER = socket.gethostbyname(socket.gethostname())
-ADDR: tuple = (SERVER, PORT)
+
 FORMAT: str = 'UTF-8'
 
 def server(ADDR: tuple):
@@ -53,11 +52,12 @@ def calculator(op: str, x: int, y: int) -> int:
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 1:
+    if len(sys.argv) < 1:
         print("Usage: python multiCalculator.py")
-        sys.exit(1)  
+        sys.exit(1) 
 
+    SERVER = sys.argv[1]
     print(f"New server @ host={SERVER} - port={PORT}")  # Inform user of peer initialization
-
+    ADDR = SERVER, PORT
     server(ADDR)
 
