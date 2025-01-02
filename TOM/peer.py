@@ -127,7 +127,7 @@ def sending_message(message, max_attempts = 10):
                 break
             except socket.error as e:
                 attempts+=1
-                logging.info(f"Attempts {attempts} failed for {peer}: {e}")
+                node.logger.info(f"Attempts {attempts} failed for {peer}: {e}")
                 time.sleep(3)
                 if attempts > max_attempts:
                     node.connected_peers.remove(peer)
@@ -161,6 +161,7 @@ def periodic_send(node: PeerNode):
                 time.sleep(0.4)
                 sending = node.hostname, 'ready', 0
                 sending_message(pickle.dumps(sending))
+        sys.exit(0)
             
     threading.Thread(target=send_poisson_messages, daemon=True).start()
 
