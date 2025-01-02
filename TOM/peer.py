@@ -32,6 +32,7 @@ class PeerNode:
 
 def signal_handler(sig, frame):
     print("\nSinal de interrupção recebido. Encerrando o servidor...")
+    propagate_shutdown(node)
     sys.exit(0)
 
 # Vincular o manipulador ao sinal de interrupção (Ctrl+C)
