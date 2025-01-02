@@ -64,12 +64,12 @@ def server_run(node: PeerNode):
             client_address: str = addr[0]  # Extract the client address
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, node, client_address)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, node, client_address, server)).start()
     
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
-def handle_connection(client: socket.socket, node: PeerNode, client_address):
+def handle_connection(client: socket.socket, node: PeerNode, client_address, server: socket):
     try:
         msg = client.recv(1024)
 
@@ -79,6 +79,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
 
         if word == 'shutdown':
             print('shut')
+            server.close()
             sys.exit(0)
 
         if word == 'ready':
