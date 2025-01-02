@@ -49,8 +49,9 @@ def server_run(node: PeerNode):
 
             # Handle the connection in a separate thread
             threading.Thread(target=handle_connection, args=(client_socket, node, client_address)).start()
-        except socket.timeout:
-            continue
+        except KeyboardInterrupt:
+            print("\nEncerrando o servidor...")
+            server.close()
         
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
@@ -64,7 +65,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
         ip_peer, word, receiv_clock = received_data
 
         if word == 'shutdown':
-            print('shut')
             propagate_shutdown(node)
             client.close()
             sys.exit(0)
@@ -116,7 +116,6 @@ def sending_message(message, max_attempts = 10):
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
-                    print(node.connected_peers)
 
                 client_socket.close()
                 break
