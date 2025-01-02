@@ -175,6 +175,7 @@ if __name__ == "__main__":
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, peers=peers_)
     node.client_sockets = node._client_sockets
+    print(node.client_sockets)
 
     print(f"Node initialized at {hostname_}:{node.port}")
 
