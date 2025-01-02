@@ -37,7 +37,6 @@ def signal_handler(sig, frame):
 # Vincular o manipulador ao sinal de interrupção (Ctrl+C)
 signal.signal(signal.SIGINT, signal_handler)
 
-
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / lambda_
 
@@ -57,6 +56,7 @@ def server_run(node: PeerNode):
                     break
                 node.logger.error(f"Error accepting connection: {e}")
     finally:
+        node.connected_peers.clear()
         server.close()
         node.logger.info("Server socket closed.")
         sys.exit(0)
@@ -71,9 +71,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
 
         if word == 'shutdown':
             print('shut')
-            #propagate_shutdown(node)
             node.connected_peers.clear()
-            
             node.shutdown_flag.set()
             print(node.connected_peers)
             return 
@@ -94,7 +92,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
 
     finally:
         client.close()
-
 
 def propagate_shutdown(node: PeerNode):
     """Send a shutdown message to all peers and shut down the node."""
@@ -143,7 +140,6 @@ def print_message():
             if msg != 'ack':
                 print(curr_clock, ip, msg)
 
-
 def client(node: PeerNode):
     node.clock += 1
     word = random.choice(list(portuguese_cities))  # Convert set to list for random.choice
@@ -164,7 +160,6 @@ def periodic_send(node: PeerNode):
                 sending_message(pickle.dumps(sending))
             
     threading.Thread(target=send_poisson_messages, daemon=True).start()
-
 
 if __name__ == "__main__":
     import sys
