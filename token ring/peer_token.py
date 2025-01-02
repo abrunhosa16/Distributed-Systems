@@ -66,7 +66,7 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
                 print(f"Error connect calculator {e}")
 
         next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        next.connect(next_address)
+        next.connect((next_address, 33333))
         next.send(msg.encode(FORMAT))
 
     except Exception as e:
