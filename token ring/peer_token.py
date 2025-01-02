@@ -76,7 +76,7 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 4:
         print("Usage: python peer.py <hostname> <port> <host_peer> <port_peer>")
         sys.exit(1)  
 
