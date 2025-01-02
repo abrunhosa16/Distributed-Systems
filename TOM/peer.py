@@ -51,7 +51,7 @@ def server_run(node: PeerNode):
         while not node.shutdown_flag.is_set():
             try:
                 client_socket, addr = server.accept()
-                threading.Thread(target=handle_connection, args=(client_socket, node, addr[0], server)).start()
+                threading.Thread(target=handle_connection, args=(client_socket, node, addr[0])).start()
             except socket.error as e:
                 if node.shutdown_flag.is_set():
                     break
