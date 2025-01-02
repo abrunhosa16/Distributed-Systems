@@ -60,7 +60,7 @@ def server_run(node: PeerNode):
         server.close()
         node.logger.info("Server socket closed.")
 
-def handle_connection(client: socket.socket, node: PeerNode, client_address, server: socket):
+def handle_connection(client: socket.socket, node: PeerNode, client_address):
     try:
         msg = client.recv(1024)
 
@@ -72,9 +72,9 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
             print('shut')
             #propagate_shutdown(node)
             node.connected_peers.clear()
+            
             node.shutdown_flag.set()
-            server.close()
-            sys.exit(0)
+            print(node.connected_peers)
             return 
             
         if word == 'ready':
