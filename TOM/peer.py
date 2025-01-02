@@ -41,7 +41,6 @@ def signal_handler(sig, frame):
                 node.logger.info(f"Sent shutdown signal to {peer}")
         except Exception as e:
             node.logger.warning(f"Failed to send shutdown signal to {peer}: {e}")
-    sys.exit(0)
 
 # Vincular o manipulador ao sinal de interrupção (Ctrl+C)
 signal.signal(signal.SIGINT, signal_handler)
@@ -80,6 +79,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
         if word == 'shutdown':
             print('shut')
             server.close()
+            client.close()
             sys.exit(0)
 
         if word == 'ready':
