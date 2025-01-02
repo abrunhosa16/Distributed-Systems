@@ -161,7 +161,6 @@ def periodic_send(node: PeerNode):
                 time.sleep(0.4)
                 sending = node.hostname, 'ready', 0
                 sending_message(pickle.dumps(sending))
-        sys.exit(0)
             
     threading.Thread(target=send_poisson_messages, daemon=True).start()
 
