@@ -116,7 +116,6 @@ def sending_message(message, max_attempts = 10):
         attempts = 0
         while True:
             try:
-                print(node.client_sockets)
                 node.client_sockets[peer].connect((peer, node.port))
                 node.client_sockets[peer].sendall(message)
                 logging.info(f"Message sent successfully to {peer}")
@@ -175,8 +174,10 @@ if __name__ == "__main__":
     peers_ = sys.argv[1:]
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, peers=peers_)
+    node.client_sockets = node._client_sockets
 
     print(f"Node initialized at {hostname_}:{node.port}")
+
 
     periodic_send(node)
     server_run(node)
