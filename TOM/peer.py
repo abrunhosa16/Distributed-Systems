@@ -76,8 +76,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
         if word == 'shutdown':
             propagate_shutdown(node)
             sys.exit(0)
-
-        
+            return 
 
         if word == 'ready':
             node.connected_peers.add(ip_peer)
