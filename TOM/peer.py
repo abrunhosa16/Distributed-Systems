@@ -76,7 +76,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
         if word == 'shutdown':
             propagate_shutdown(node)
             sys.exit(0)
-            return 
 
         if word == 'ready':
             node.connected_peers.add(ip_peer)
@@ -122,7 +121,6 @@ def sending_message(message, max_attempts = 10):
                 client_socket.connect((peer, node.port))
                 client_socket.sendall(message)
                 logging.info(f"Message sent successfully to {peer}")
-                client_socket.close()
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
@@ -159,8 +157,10 @@ def periodic_send(node: PeerNode):
             if node.peers.issubset(node.connected_peers):
                 client(node)
                 time.sleep(delay)
+                print('nd')
             else:
                 time.sleep(0.2)
+                print('o que se passa')
                 sending = node.hostname, 'ready', 0
                 sending_message(pickle.dumps(sending))
     threading.Thread(target=send_poisson_messages, daemon=True).start()
