@@ -5,7 +5,7 @@ PORT = 12348
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 client.bind((HOST, PORT))
-client.connect(('l1203', 3000))
+client.connect(('l813', 3000))
 
 client.send(str('token').encode('UTF-8'))
 
