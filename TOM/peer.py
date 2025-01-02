@@ -118,14 +118,13 @@ def sending_message(message, max_attempts = 10):
                 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client_socket.connect((peer, node.port))
                 client_socket.sendall(message)
-                node.logger.info(f"Message sent successfully to {peer}")
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
                 break
             except socket.error as e:
                 attempts+=1
-                node.logger.info(f"Attempts {attempts} failed for {peer}: {e}")
+                print(f"Attempts {attempts} failed for {peer}: {e}")
                 time.sleep(3)
                 if attempts > max_attempts:
                     node.connected_peers.remove(peer)
