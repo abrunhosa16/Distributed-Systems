@@ -71,6 +71,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
         if word == 'shutdown':
             print('shut')
             propagate_shutdown(node)
+            node.connected_peers.clear()
             node.shutdown_flag.set()
             return 
             
