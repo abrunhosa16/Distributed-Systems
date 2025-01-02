@@ -70,10 +70,11 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
 
         if word == 'shutdown':
             print('shut')
-            propagate_shutdown(node)
+            #propagate_shutdown(node)
             node.connected_peers.clear()
             node.shutdown_flag.set()
             server.close()
+            sys.exit(0)
             return 
             
         if word == 'ready':
