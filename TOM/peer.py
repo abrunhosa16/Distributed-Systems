@@ -19,6 +19,7 @@ class PeerNode:
         self.logger = self._setup_logger()
         self.connected_peers: set = set()
         self.shutdown_flag = threading.Event()  # Flag for clean shutdown
+        self.client_sockets = dict()
 
 
     def _setup_logger(self):
@@ -29,6 +30,13 @@ class PeerNode:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         return logger
+
+    def _client_sockets(self):
+        for peer in self.peers:
+            if peer not in self.client_sockets:
+                self.client_sockets[peer] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            return self.client_sockets
+
 
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / lambda_
@@ -108,9 +116,9 @@ def sending_message(message, max_attempts = 10):
         attempts = 0
         while True:
             try:
-                client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                client_socket.connect((peer, node.port))
-                client_socket.sendall(message)
+                print(node.client_sockets)
+                node.client_sockets[peer].connect((peer, node.port))
+                node.client_sockets[peer].sendall(message)
                 logging.info(f"Message sent successfully to {peer}")
 
                 if peer not in node.connected_peers:
