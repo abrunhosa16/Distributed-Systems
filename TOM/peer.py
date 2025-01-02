@@ -81,6 +81,7 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
             server.close()
             client.close()
             sys.exit(0)
+            return
 
         if word == 'ready':
             node.connected_peers.add(ip_peer)
