@@ -11,7 +11,7 @@ import signal
 portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
     
 class PeerNode:
-    def __init__(self, hostname: str, peers: set[int], port:int = 55556):
+    def __init__(self, hostname: str, peers: set[int], port:int = 55550):
         self.hostname = hostname
         self.port = port
         self.peers = peers
@@ -32,15 +32,7 @@ class PeerNode:
 
 def signal_handler(sig, frame):
     print("\nSinal de interrupção recebido. Encerrando o servidor...")
-    for peer in node.peers:
-        shutdown_message = pickle.dumps((node.hostname, 'shutdown', node.clock))
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((peer, node.port))
-                sock.sendall(shutdown_message)
-                node.logger.info(f"Sent shutdown signal to {peer}")
-        except Exception as e:
-            node.logger.warning(f"Failed to send shutdown signal to {peer}: {e}")
+    propagate_shutdown(node)
 
 # Vincular o manipulador ao sinal de interrupção (Ctrl+C)
 signal.signal(signal.SIGINT, signal_handler)
@@ -61,21 +53,20 @@ def server_run(node: PeerNode):
             addr: tuple[str, int]
             client_socket, addr = server.accept()  # Accept a new client connection
             client_address: str = addr[0]  # Extract the client address
-            msg = client_socket.recv(1024)
-            if not msg:
-                break
+         
 
 
 
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, node, client_address, server, msg)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, node, client_address, server)).start()
     
         except Exception as e:
             node.logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
-def handle_connection(client: socket.socket, node: PeerNode, client_address, server: socket, msg):
+def handle_connection(client: socket.socket, node: PeerNode, client_address, server: socket):
     try:
+        msg = client.recv(1024)
 
         received_data = pickle.loads(msg)
 
@@ -83,7 +74,9 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
 
         if word == 'shutdown':
             print('shut')
-            sys.exit(0)
+            node.shutdown_flag.set()
+
+            return
             
 
         if word == 'ready':
@@ -99,6 +92,9 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address, ser
         print_message()
     except Exception as e:
         node.logger.error(f"Error handling connection from {client_address}: {e}")
+
+    finally:
+        client.close()
 
 
 def propagate_shutdown(node: PeerNode):
@@ -130,8 +126,6 @@ def sending_message(message, max_attempts = 10):
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
-
-                client_socket.close()
                 break
             except socket.error as e:
                 attempts+=1
