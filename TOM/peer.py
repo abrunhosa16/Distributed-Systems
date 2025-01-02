@@ -53,11 +53,6 @@ def server_run(node: PeerNode):
             addr: tuple[str, int]
             client_socket, addr = server.accept()  # Accept a new client connection
             client_address: str = addr[0]  # Extract the client address
-         
-
-
-
-
             # Handle the connection in a separate thread
             threading.Thread(target=handle_connection, args=(client_socket, node, client_address, server)).start()
     
@@ -101,13 +96,14 @@ def propagate_shutdown(node: PeerNode):
     """Send a shutdown message to all peers and shut down the node."""
     shutdown_message = pickle.dumps((node.hostname, 'shutdown', node.clock))
     for peer in node.peers:
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((node.hostname, peer))
-                sock.sendall(shutdown_message)
-                node.logger.info(f"Sent shutdown signal to {peer}")
-        except Exception as e:
-            node.logger.warning(f"Failed to send shutdown signal to {peer}: {e}")
+        if peer != node.hostname:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.connect((node.hostname, peer))
+                    sock.sendall(shutdown_message)
+                    node.logger.info(f"Sent shutdown signal to {peer}")
+            except Exception as e:
+                node.logger.warning(f"Failed to send shutdown signal to {peer}: {e}")
     
     # Set the shutdown flag and log the event
     node.logger.info("Shutting down this peer")
