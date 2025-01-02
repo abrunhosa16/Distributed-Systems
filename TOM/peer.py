@@ -19,8 +19,6 @@ class PeerNode:
         self.logger = self._setup_logger()
         self.connected_peers: set = set()
         self.shutdown_flag = threading.Event()  # Flag for clean shutdown
-        self.client_sockets = dict()
-
 
     def _setup_logger(self):
         logger = logging.getLogger(f"{self.hostname}_log")
@@ -110,12 +108,16 @@ def sending_message(message, max_attempts = 10):
         attempts = 0
         while True:
             try:
-                node.client_sockets[peer].sendall(message)
+                client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                client_socket.connect((peer, node.port))
+                client_socket.sendall(message)
                 logging.info(f"Message sent successfully to {peer}")
 
                 if peer not in node.connected_peers:
                     node.connected_peers.add(peer)
                     print(node.connected_peers)
+
+                client_socket.close()
                 break
             except socket.error as e:
                 attempts+=1
@@ -168,15 +170,7 @@ if __name__ == "__main__":
     peers_ = set(map(str, peers_))
     node = PeerNode(hostname= hostname_, peers=peers_)
 
-    for peer in node.peers:
-        node.client_sockets[peer] = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        node.client_sockets[peer].connect((peer, node.port))
-
-
-    print(node.client_sockets)
-
     print(f"Node initialized at {hostname_}:{node.port}")
-
 
     periodic_send(node)
     server_run(node)
