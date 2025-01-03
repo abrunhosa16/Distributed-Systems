@@ -1,149 +1,125 @@
-import socket  
-import threading  
-import logging 
-import time 
+import socket
+import threading
+import logging
 import queue
-from poissonEvents import generate_requests
 import signal
+import sys
+from typing import Tuple
+from poissonEvents import generate_requests
 
-PORT_CALCULATOR: int = 12346
-FORMAT: str = 'UTF-8'
+FORMAT = 'UTF-8'
 queue_ = queue.Queue()
-flag_shutdown = False # Use threading.Event for thread-safe shutdown handling
+shutdown_event = threading.Event() 
 
 
 class PeerNode:
-    def __init__(self,next):
-        self.next_address = next
+    def __init__(self, hostname: str, port:int , next_address: Tuple[str, int], host_calculator:str, port_calculator:int = 12346):
+        self.next_address = next_address
+        self.calculator_address = host_calculator, port_calculator
+        self.host = hostname
+        self.port = port
 
 
 def signal_handler(sig, frame):
-    global flag_shutdown
     print("\nSIGINT received. Shutting down...")
-    propagate_shutdown(PeerNode.next_address)
-    print('shut sent')
+    shutdown_event.set() 
+    propagate_shutdown(peer_node.next_address)
 
 signal.signal(signal.SIGINT, signal_handler)
 
-class logs:
+class Logs:
     def __init__(self, hostname: str):
-        self.host: str = hostname
-        self.logger: logging.Logger = logging.getLogger("logfile")
+        self.logger = logging.getLogger("logfile")
         self.logger.setLevel(logging.INFO)
-        try:
-            handler = logging.FileHandler(f"./{hostname}_peer.log", mode="a")
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-        except Exception as e:
-            print(f"Error setting up logger: {e}")
+        handler = logging.FileHandler(f"./{hostname}_peer.log", mode="a")
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
-
-def propagate_shutdown(ad):
-    print('Init shut')
+def propagate_shutdown(next_address: Tuple[str, int]):
+    print("Propagating shutdown...")
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
-            next_socket.connect(ad)
-            next_socket.send('shut'.encode(FORMAT))
+        next_socket =  socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        next_socket.connect(next_address)
+        next_socket.send("shut".encode(FORMAT))
     except Exception as e:
-        print(f"Failed to send shutdown signal to {ad}: {e}")
-    
-
+        print(f"Failed to send shutdown signal to {next_address}: {e}")
 
 def process_queue(address_calculator, logger):
     while not queue_.empty():
-        calculator_server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        calculator_server.connect(address_calculator)
+        calculator_server=  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            item: str = queue_.get()
+            calculator_server.connect(address_calculator)
+            item = queue_.get()
             calculator_server.send(item.encode(FORMAT))
-            result: str= calculator_server.recv(1024).decode(FORMAT)
-            logger.info(f"multiculator: message from calculator [result = {result}]")
+            result = calculator_server.recv(1024).decode(FORMAT)
             print(result)
+        except Exception as e:
+            logger.error(f"Error connecting to calculator: {e}")
 
-        except Exception as e: 
-            print(f"Error connect calculator {e}")
 
-def forward_message(next_addr: tuple, msg: str, logger: logging.Logger):
+def forward_message(next_address: Tuple[str, int], msg: str, logger: logging.Logger):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
-            next_socket.connect(next_addr)
+            next_socket.connect(next_address)
             next_socket.send(msg.encode(FORMAT))
-            logger.info(f"Message forwarded to {next_addr}: {msg}")
+            logger.info(f"Message forwarded to {next_address}: {msg}")
     except Exception as e:
-        logger.warning(f"Failed to forward message to {next_addr}: {e}")
+        logger.warning(f"Failed to forward message to {next_address}: {e}")
 
 
-# Function to start and run the server
-def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger, address_calculator):
-    global flag_shutdown
-    server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+def server_run(logger: logging.Logger, peer_node: PeerNode):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.bind((peer_node.host, peer_node.port))
+        server.listen()
 
-    server.bind((host, port))  # Bind the server to the specified host and port
-    server.listen()  # Start listening for incoming connections (1 = max backlog)
-    logger.info(f"Server: endpoint running at port {port} ...")  # Log server startup
+        logger.info(f"Server running at {peer_node.host}:{peer_node.port}")
+        while not shutdown_event.is_set():
+            try:
+                client_socket, addr = server.accept()
+                threading.Thread(target=handle_connection, args=(client_socket, addr, logger, peer_node)).start()
+            except Exception as e:
+                logger.error(f"Error accepting connection: {e}")
+        print('Server is closed')
+        server.close()
 
-    while not flag_shutdown:
-        try:
-            client_socket: socket.socket
-            addr: tuple[str, int]
-            # Accept a new client connection
-            client_socket, addr = server.accept()
-            client_address: str = addr[0]  # Extract the client address
-            logger.info(f"Server: new connection from {client_address}")  # Log the connection
 
-            # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator, server)).start()
 
-        except Exception as e:
-            logger.error(f"Error accepting connection: {e}")  # Log any connection errors
-
-# Function to handle individual client connections
-def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator, server):
-    global flag_shutdown
+def handle_connection(client: socket.socket, client_address: Tuple[str, int], logger: logging.Logger, peer_node: PeerNode):
     try:
-        # Create input streams for the client connection
-        msg: str = client.recv(1024).decode(FORMAT)
-        logger.info(f"Server: message from host {client_address} [command = {msg}]")            
+        msg = client.recv(1024).decode(FORMAT)
+        logger.info(f"Received message from {client_address}: {msg}")
 
-        if msg == 'shut' or flag_shutdown:
-            print('recebida flag')
-            flag_shutdown = True
-            propagate_shutdown(next_address, logger, server)
-            server.close()
-            client.close()
-            sys.exit(0)
+        if msg == "shut":
+            shutdown_event.set()
+            propagate_shutdown(peer_node.next_address)
+            return
 
-        process_queue(address_calculator, logger)
-
-        forward_message(next_address, msg, logger)
+        process_queue(peer_node.calculator_address, logger)
+        forward_message(peer_node.next_address, msg, logger)
 
     except Exception as e:
-        logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
+        logger.error(f"Error handling connection: {e}")
 
     finally:
         client.close()
-   
+
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) != 4:
-        print("Usage: python peer.py <hostname> <port> <host_peer> <port_peer>")
-        sys.exit(1)  
+        print("Usage: python peer.py <hostname> <next_peer_host> <calculator_host>")
+        sys.exit(1)
 
-    hostname = sys.argv[1]  # Get hostname from arguments
-    next = sys.argv[2]
-    HOST_CALCULATOR = sys.argv[3]
-    log = logs(hostname)
+    hostname = sys.argv[1]
+    next_peer_host = sys.argv[2]
+    calculator_host = sys.argv[3]
+    port = 44422
 
-    port = 44421
+    log = Logs(hostname)
+    next_address_ = (next_peer_host, port)
+    peer_node = PeerNode(next_address_, host_calculator= calculator_host)
 
-    next_address = next,port 
-    ad = PeerNode(next= next_address)
-
-    print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
+    print(f"Server starting at {hostname}:{port}")
     generate_requests(4, queue_)
-    server_run(hostname, port, next_address, log.logger, (HOST_CALCULATOR, PORT_CALCULATOR))
-
+    server_run(log.logger, peer_node)
