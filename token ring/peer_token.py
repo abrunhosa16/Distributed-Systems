@@ -11,9 +11,9 @@ FORMAT = 'UTF-8'
     
 # Represents a peer in the network, storing its local address, the next peer's address, and the calculator server's address, queue and shutdown command.
 class PeerNode:
-    def __init__(self, hostname: str, port:int , next_address: Tuple[str, int], host_calculator:str, port_calculator:int = 12346):
+    def __init__(self, hostname: str, port:int , next_address: Tuple[str, int], host_calculator:str):
         self.next_address = next_address
-        self.calculator_address = host_calculator, port_calculator
+        self.calculator_address = host_calculator, port
         self.host = hostname
         self.port = port
         self.server_socket =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
