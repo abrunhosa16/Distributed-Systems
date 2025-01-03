@@ -96,13 +96,13 @@ def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger,
             logger.info(f"Server: new connection from {client_address}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator, server)).start()
 
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 # Function to handle individual client connections
-def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator):
+def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator, server):
     #global flag_shutdown
     try:
         # Create input streams for the client connection
@@ -112,7 +112,7 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
         if msg == 'shut' or flag_shutdown:
             print('recbida flag')
             flag_shutdown.set()
-            propagate_shutdown(next_address, logger)
+            propagate_shutdown(next_address, logger, server)
 
         process_queue(address_calculator, logger)
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44435
+    port = 44436
 
     next_address = next,port 
 
