@@ -63,7 +63,7 @@ class PeerNode:
         self.host = hostname
         self.port = port 
         self.my_set = dict()
-        self.neighboors = set(map(int, neighboors))
+        self.neighboors = set(map(str, neighboors))
         
 class logs:
     def __init__(self, hostname: str):
