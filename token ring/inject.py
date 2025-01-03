@@ -1,7 +1,8 @@
 import socket
+import random
 
 HOST = socket.gethostbyname(socket.gethostname())
-PORT = 12348
+PORT = random.randint(30000, 40000)
 print(HOST)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
