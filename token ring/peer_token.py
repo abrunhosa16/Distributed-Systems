@@ -115,7 +115,7 @@ if __name__ == "__main__":
     hostname = sys.argv[1]
     next_peer_host = sys.argv[2]
     calculator_host = sys.argv[3]
-    port = 44423
+    port = 44424
 
     log = Logs(hostname)
     next_address_ = (next_peer_host, port)
