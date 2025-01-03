@@ -27,8 +27,8 @@ def server(ADDR: tuple):
 
         except Exception as e:
             print(f"Error connection {e}")
-    print(server.close())
-    return 
+    server.close()
+    print('server is closed')
 
 def handle_connection(client:socket.socket):
     try:
