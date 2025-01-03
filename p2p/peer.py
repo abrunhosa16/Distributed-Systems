@@ -108,16 +108,18 @@ def server_run(node: PeerNode, logger: logging.Logger):
 
     
 # Function to handle individual client connections
-def handle_connection(client: socket.socket, client_address: str, logger: logging.Logger, node:PeerNode):
+def handle_connection(client: socket.socket, client_address: str, logger: logging.Logger):
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
         received_set = pickle.loads(msg)  # load the dict that came from another peer.
 
         logger.info(f"Server: message from host {client_address} [command = {received_set}]")
-        print(f"{received_set} received from {client_address}")
+        #print(f"{received_set} received from {client_address}")
 
         merge_set(received_set)
+
+        print(peer_node.my_set)
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
@@ -138,7 +140,6 @@ def start_anti_entropy():
 def gossiping_message():
     peer_node.my_set = dictionary_operations()
     send_data = pickle.dumps(peer_node.my_set)
-    print(peer_node.neighboors)
     for neigh in peer_node.neighboors:
         try:
             print(f"{peer_node.my_set} sended to {neigh}")
