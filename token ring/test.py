@@ -21,7 +21,7 @@ class PeerNode:
 
 def signal_handler(sig, frame):
     print("\nSIGINT received. Shutting down...")
-    shutdown_event.set()  # Marca o evento de desligamento
+    shutdown_event.set() 
     propagate_shutdown(peer_node.next_address)
     print("Shutdown signal sent")
 
@@ -86,6 +86,9 @@ def server_run(host: str, port: int, next_address: Tuple[str, int], logger: logg
                 threading.Thread(target=handle_connection, args=(client_socket, addr, next_address, logger, address_calculator)).start()
             except Exception as e:
                 logger.error(f"Error accepting connection: {e}")
+        
+        server.close()
+
 
 
 def handle_connection(client: socket.socket, client_address: Tuple[str, int], next_address: Tuple[str, int], logger: logging.Logger, address_calculator):
