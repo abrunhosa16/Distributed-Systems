@@ -101,7 +101,7 @@ def server_run(node: PeerNode, logger: logging.Logger):
             logger.info(f"Server: new connection from {client_address[0]}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, logger, node)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, logger)).start()
     
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
