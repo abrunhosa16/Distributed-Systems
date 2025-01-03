@@ -51,7 +51,7 @@ def merge_set(recv_set):
 def dictionary_operations():
     current_time = time.time()  # Captura o tempo atual uma vez
     # Usa compreensão de dicionário para filtrar valores dentro do intervalo DELTA
-    cop = {key: value for key, value in peer_node.my_set.items() if current_time - value <= DELTA}
+    peer_node.my_set = {key: value for key, value in peer_node.my_set.items() if current_time - value <= DELTA}
     
     # Adiciona o servidor atual com o tempo atual
     peer_node.my_set[peer_node.port] = current_time
