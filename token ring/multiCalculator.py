@@ -3,7 +3,7 @@ import threading
 import signal
 import sys
 
-PORT: int = 44428
+PORT: int = 44429
 FORMAT: str = 'UTF-8'
 
 shutdown_event = threading.Event()

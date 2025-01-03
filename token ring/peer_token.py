@@ -64,6 +64,7 @@ def process_queue(node: PeerNode, logger: Logs):
             print(result)
         except Exception as e:
             logger.error(f"Error connecting to calculator: {e}")
+            propagate_shutdown(node)
 
 # Forwards a received message to the next peer in the network.
 def forward_message(next_address: Tuple[str, int], msg: str, logger: logging.Logger):
@@ -119,7 +120,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     hostname = sys.argv[1]
-    port = 44428
+    port = 44429
     next_peer_host = sys.argv[2]
     next_address_ = (next_peer_host, port)
 

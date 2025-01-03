@@ -1,5 +1,4 @@
 import socket
-import random
 import sys
 
 HOST = socket.gethostbyname(socket.gethostname())
@@ -8,12 +7,12 @@ print(HOST)
 class NodeP:
     def __init__(self, next_):
         self.next_host = next_
-        self.port = 44428
+        self.port = 44429
 try:
     node: NodeP
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     client.bind((HOST, node.port))
-    client.connect((node.next_host, 44428))
+    client.connect((node.next_host, node.port))
 
     client.send(str('token').encode('UTF-8'))
 
