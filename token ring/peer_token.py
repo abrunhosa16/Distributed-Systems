@@ -11,12 +11,12 @@ FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
 flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdown handling
 
-# def signal_handler(sig, frame):
-#     global flag_shutdown
-#     print("\nSIGINT received. Shutting down...")
-#     flag_shutdown.set()
+def signal_handler(sig, frame):
+    global flag_shutdown
+    print("\nSIGINT received. Shutting down...")
+    flag_shutdown.set()
 
-signal.signal(signal.SIGINT, flag_shutdown.set())
+signal.signal(signal.SIGINT, signal_handler)
 
 class logs:
     def __init__(self, hostname: str):
