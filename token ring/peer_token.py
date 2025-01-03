@@ -14,7 +14,9 @@ flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdow
 def signal_handler(sig, frame):
     global flag_shutdown
     print("\nSIGINT received. Shutting down...")
+    print(f'flag : {flag_shutdown}')
     flag_shutdown.set()
+    print(f'flagg {flag_shutdown}')
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -135,7 +137,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44449
+    port = 44434
 
     next_address = next,port 
 
