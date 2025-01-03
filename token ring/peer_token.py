@@ -142,5 +142,5 @@ if __name__ == "__main__":
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     generate_requests(4, queue_)
-    server_run(hostname, next_address, log.logger, (HOST_CALCULATOR, PORT_CALCULATOR))
+    server_run(hostname, port, next_address, log.logger, (HOST_CALCULATOR, PORT_CALCULATOR))
 
