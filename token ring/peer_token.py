@@ -9,14 +9,14 @@ import signal
 PORT_CALCULATOR: int = 12346
 FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
-flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdown handling
+# flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdown handling
 
-def signal_handler(sig, frame):
-    global flag_shutdown
-    print("\nSIGINT received. Shutting down...")
-    flag_shutdown.set()
+# def signal_handler(sig, frame):
+#     global flag_shutdown
+#     print("\nSIGINT received. Shutting down...")
+#     flag_shutdown.set()
 
-signal.signal(signal.SIGINT, signal_handler)
+# signal.signal(signal.SIGINT, signal_handler)
 
 
 class logs:
@@ -32,29 +32,6 @@ class logs:
         except Exception as e:
             print(f"Error setting up logger: {e}")
 
-# Function to start and run the server
-def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger, address_calculator):
-    server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-    server.bind((host, port))  # Bind the server to the specified host and port
-    server.listen()  # Start listening for incoming connections (1 = max backlog)
-    logger.info(f"Server: endpoint running at port {port} ...")  # Log server startup
-
-    while True:
-        try:
-            client_socket: socket.socket
-            addr: tuple[str, int]
-            # Accept a new client connection
-            client_socket, addr = server.accept()
-            client_address: str = addr[0]  # Extract the client address
-            logger.info(f"Server: new connection from {client_address}")  # Log the connection
-
-            # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator)).start()
-
-        except Exception as e:
-            logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 def propagate_shutdown(next_addr: tuple, logger: logging.Logger):
     try:
@@ -90,30 +67,41 @@ def forward_message(next_addr: tuple, msg: str, logger: logging.Logger):
         logger.warning(f"Failed to forward message to {next_addr}: {e}")
 
 
+# Function to start and run the server
+def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger, address_calculator):
+    server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    server.bind((host, port))  # Bind the server to the specified host and port
+    server.listen()  # Start listening for incoming connections (1 = max backlog)
+    logger.info(f"Server: endpoint running at port {port} ...")  # Log server startup
+
+    while True:
+        try:
+            client_socket: socket.socket
+            addr: tuple[str, int]
+            # Accept a new client connection
+            client_socket, addr = server.accept()
+            client_address: str = addr[0]  # Extract the client address
+            logger.info(f"Server: new connection from {client_address}")  # Log the connection
+
+            # Handle the connection in a separate thread
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator)).start()
+
+        except Exception as e:
+            logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 # Function to handle individual client connections
 def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator):
-    global flag_shutdown
+    #global flag_shutdown
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024).decode(FORMAT)
         logger.info(f"Server: message from host {client_address} [command = {msg}]")
-        
-
-        if msg == 'shut':
-            propagate_shutdown(next_address, logger)
 
         process_queue(address_calculator, logger)
 
-        if flag_shutdown:
-            next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-            next.connect(next_address)
-            next.send('shut'.encode(FORMAT))
-            sys.exit(0)
-
-
-        if msg: 
-            forward_message(next_address, msg, logger)
+        forward_message(next_address, msg, logger)
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
@@ -134,7 +122,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44444
+    port = 44445
 
     next_address = next,port 
 
