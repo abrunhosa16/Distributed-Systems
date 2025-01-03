@@ -1,6 +1,7 @@
 import socket
 import logging
 import threading
+import pickle
 
 PORT: int = 12345
 
@@ -20,9 +21,10 @@ def server(ADDR: tuple):
 
 def handle_connection(client:socket.socket):
     try:
-        msg: str = client.recv(1024).decode(FORMAT)
-        print(f"mensagem {msg}")
-        msg: list[str] = msg.split()
+        recv: str = client.recv(1024)
+        client, mensg = pickle.loads(recv)
+        print(f"mensagem {mensg} from {client}")
+        msg: list[str] = mensg.split()
         op = msg[0]
         x = int(msg[1])
         y = int(msg[2])

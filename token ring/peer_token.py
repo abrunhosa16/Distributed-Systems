@@ -4,6 +4,7 @@ import logging
 import time 
 import queue
 from poissonEvents import generate_requests
+import pickle
 
 PORT_CALCULATOR: int = 12345
 FORMAT: str = 'UTF-8'
@@ -40,13 +41,13 @@ def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger,
             logger.info(f"Server: new connection from {client_address}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator, host)).start()
 
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 # Function to handle individual client connections
-def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator):
+def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator, host):
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024).decode(FORMAT)
@@ -57,7 +58,9 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
             calculator_server.connect(address_calculator)
             try:
                 item: str = queue_.get()
-                calculator_server.send(item.encode(FORMAT))
+                send_message = host, item
+                send_message = pickle.dumps(send_message)
+                calculator_server.send(send_message)
                 result: str= calculator_server.recv(1024).decode(FORMAT)
                 logger.info(f"multiculator: message from calculator [result = {result}]")
                 print(result)
