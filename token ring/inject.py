@@ -1,14 +1,19 @@
 import socket
 import random
+import sys
 
 HOST = socket.gethostbyname(socket.gethostname())
-PORT = random.randint(30000, 40000)
 print(HOST)
 
+class NodeP:
+    def __init__(self, next_):
+        self.next_host = next_
+        self.port = 44428
 try:
+    node: NodeP
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    client.bind((HOST, PORT))
-    client.connect(('l813', 44428))
+    client.bind((HOST, node.port))
+    client.connect((node.next_host, 44428))
 
     client.send(str('token').encode('UTF-8'))
 
@@ -17,3 +22,11 @@ except Exception as e:
     print(f'Error sending token {e}')
 
 
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python inject.py next_host")
+        sys.exit(1)
+
+    next_host = sys.argv[1]
+    node = NodeP(next_= next_host)
+    
