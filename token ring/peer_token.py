@@ -9,15 +9,15 @@ import signal
 PORT_CALCULATOR: int = 12346
 FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
-# flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdown handling
+flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdown handling
 
 # def signal_handler(sig, frame):
 #     global flag_shutdown
 #     print("\nSIGINT received. Shutting down...")
 #     flag_shutdown.set()
 
-# signal.signal(signal.SIGINT, signal_handler)
-
+signal.signal(signal.SIGINT, flag_shutdown.set())
+signal.signal(signal.SIGTERM, flag_shutdown.set())
 
 class logs:
     def __init__(self, hostname: str):
@@ -33,7 +33,14 @@ class logs:
             print(f"Error setting up logger: {e}")
 
 
-def propagate_shutdown(next_addr: tuple, logger: logging.Logger):
+def propagate_shutdown(next_addr: tuple, logger: logging.Logger, server: socket):
+    global flag_shutdown
+
+    if flag_shutdown:
+        return 
+    
+    flag_shutdown.set()
+    print('Init shut')
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
             next_socket.connect(next_addr)
@@ -41,6 +48,11 @@ def propagate_shutdown(next_addr: tuple, logger: logging.Logger):
             logger.info(f"Shutdown signal sent to {next_addr}")
     except Exception as e:
         logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
+    
+    server.close()
+    
+    sys.exit(0)
+
 
 
 def process_queue(address_calculator, logger):
@@ -98,6 +110,9 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
         # Create input streams for the client connection
         msg: str = client.recv(1024).decode(FORMAT)
         logger.info(f"Server: message from host {client_address} [command = {msg}]")
+
+        if msg == 'shut':
+            propagate_shutdown(next_address, logger)
 
         process_queue(address_calculator, logger)
 
