@@ -36,18 +36,16 @@ def propagate_shutdown(next_addr: tuple, logger: logging.Logger, server: socket)
     global flag_shutdown
 
     if flag_shutdown:
-        return 
     
-    flag_shutdown.set()
-    print('Init shut')
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
-            next_socket.connect(next_addr)
-            next_socket.send('shut'.encode(FORMAT))
-            logger.info(f"Shutdown signal sent to {next_addr}")
-    except Exception as e:
-        logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
-    
+        print('Init shut')
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
+                next_socket.connect(next_addr)
+                next_socket.send('shut'.encode(FORMAT))
+                logger.info(f"Shutdown signal sent to {next_addr}")
+        except Exception as e:
+            logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
+        
     server.close()
     
     sys.exit(0)
