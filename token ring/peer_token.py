@@ -21,6 +21,7 @@ def signal_handler(sig, frame):
     global flag_shutdown
     print("\nSIGINT received. Shutting down...")
     propagate_shutdown(PeerNode.next_address)
+    print('shut sent')
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -75,6 +76,7 @@ def forward_message(next_addr: tuple, msg: str, logger: logging.Logger):
 
 # Function to start and run the server
 def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger, address_calculator):
+    global flag_shutdown
     server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -136,7 +138,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44429
+    port = 44421
 
     next_address = next,port 
     ad = PeerNode(next= next_address)
