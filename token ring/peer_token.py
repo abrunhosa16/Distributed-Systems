@@ -9,13 +9,13 @@ import signal
 PORT_CALCULATOR: int = 12346
 FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
-flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdown handling
+flag_shutdown = False # Use threading.Event for thread-safe shutdown handling
 
 def signal_handler(sig, frame):
     global flag_shutdown
     print("\nSIGINT received. Shutting down...")
     print(f'flag : {flag_shutdown}')
-    flag_shutdown.set()
+    flag_shutdown = True
     print(f'flagg {flag_shutdown}')
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -111,7 +111,7 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
 
         if msg == 'shut' or flag_shutdown:
             print('recbida flag')
-            flag_shutdown.set()
+            flag_shutdown = True
             propagate_shutdown(next_address, logger, server)
 
         process_queue(address_calculator, logger)
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44436
+    port = 44437
 
     next_address = next,port 
 
