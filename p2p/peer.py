@@ -33,9 +33,11 @@ threshold).
 # MAXIMUM TIME WITHOUT UPDATE
 DELTA = 90  
 
+# Periodically calculates a delay for Anti-Entropy updates using a Poisson distribution.
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / (lambda_/60)
 
+# Merges a received set of peers into the current peer's map, updating timestamps where necessary.
 def merge_set(recv_set):
     merged = peer_node.my_set
     for key in recv_set:
@@ -46,6 +48,7 @@ def merge_set(recv_set):
 
     peer_node.my_set = merged
 
+# Removes outdated entries from the peer's map and updates its own timestamp.
 def dictionary_operations():
     current_time = time.time() 
     peer_node.my_set = {key: value for key, value in peer_node.my_set.items() if current_time - value <= DELTA}
@@ -73,6 +76,7 @@ class logs:
         except Exception as e:
             print(f"Error setting up logger: {e}")
 
+# Handles server-side logic, listens for incoming connections, and updates the peer map based on received data.
 def server_run(logger: logging.Logger):
     server = peer_node.server_socket
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -107,7 +111,7 @@ def server_run(logger: logging.Logger):
         server.close()
 
     
-# Function to handle individual client connections
+# Handles communication with a single peer, processes received data, and updates the map.
 def handle_connection(client: socket.socket, client_address: str, logger: logging.Logger):
     try:
         # Create input streams for the client connection
@@ -127,6 +131,7 @@ def handle_connection(client: socket.socket, client_address: str, logger: loggin
     finally:
         client.close()
 
+# Periodically triggers Anti-Entropy updates by sending the current map to neighbors.
 def start_anti_entropy():
     """
     Periodically updates the peer map using Anti-Entropy.
@@ -139,8 +144,9 @@ def start_anti_entropy():
 
     threading.Thread(target=anti_entropy_cycle, daemon=True).start()
 
+# Sends the peer's current map to all neighbors as part of the Anti-Entropy algorithm.
 def gossiping_message(max_attempts = 3):
-    dictionary_operations()
+    dictionary_operations()  # Cleans up outdated entries and updates the timestamp
     send_data = pickle.dumps(peer_node.my_set)
     for neigh in peer_node.neighboors:
         attempts = 0

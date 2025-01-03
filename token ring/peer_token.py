@@ -6,6 +6,7 @@ import signal
 import sys
 from typing import Tuple
 from poissonEvents import generate_requests
+import time
 
 FORMAT = 'UTF-8'
     
@@ -68,14 +69,22 @@ def process_queue(node: PeerNode, logger: Logs):
             return
 
 # Forwards a received message to the next peer in the network.
-def forward_message(next_address: Tuple[str, int], msg: str, logger: logging.Logger):
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
+def forward_message(next_address: Tuple[str, int], msg: str, logger: logging.Logger, max_attempts = 3):
+    attempts = 0
+    while True:
+        try:
+            next_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
             next_socket.connect(next_address)
             next_socket.send(msg.encode(FORMAT))
             logger.info(f"Message forwarded to {next_address}: {msg}")
-    except Exception as e:
-        logger.warning(f"Failed to forward message to {next_address}: {e}")
+            break
+        except Exception as e:
+            attempts+=1
+            print(f"Attempts {attempts} failed for {next_address}: {e}, trying again in 3 seconds ...")
+            time.sleep(3)
+            if attempts > max_attempts:
+                propagate_shutdown(peer_node)
+                break
 
 # Starts the server socket to listen for peer connections and manages connections in separate threads.
 def server_run(logger: logging.Logger, peer_node: PeerNode):
