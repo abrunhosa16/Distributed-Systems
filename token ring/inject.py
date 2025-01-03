@@ -7,18 +7,16 @@ print(HOST)
 class NodeP:
     def __init__(self, next_):
         self.next_host = next_
-        self.port = 44459
-try:
-    node: NodeP
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    client.bind((HOST, node.port))
-    client.connect((node.next_host, node.port))
-
-    client.send(str('token').encode('UTF-8'))
-
-    client.close()
-except Exception as e:
-    print(f'Error sending token {e}')
+        self.port = 44451
+def server(node:NodeP):
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        client.bind((HOST, node.port))
+        client.connect((node.next_host, node.port))
+        client.send(str('token').encode('UTF-8'))
+        client.close()
+    except Exception as e:
+        print(f'Error sending token {e}')
 
 
 if __name__ == "__main__":
@@ -28,4 +26,5 @@ if __name__ == "__main__":
 
     next_host = sys.argv[1]
     node = NodeP(next_= next_host)
+    server(node)
     
