@@ -59,6 +59,7 @@ def server_run(node: PeerNode):
                 continue  # Check for shutdown_event after timeout
     finally:
         node.connected_peers.clear()
+        print('Server is closed')
         server.close()
         node.logger.info("Server socket closed.")
         
@@ -72,7 +73,6 @@ def handle_connection(client: socket.socket, node: PeerNode, client_address):
         ip_peer, word, receiv_clock = received_data
 
         if word == 'shutdown':
-            print('shut')
             node.connected_peers.clear()
             node.shutdown_flag.set()
             client.close()
