@@ -35,22 +35,15 @@ class logs:
 
 
 def propagate_shutdown(next_addr: tuple, logger: logging.Logger, server: socket):
-    global flag_shutdown
-
-    if flag_shutdown:
+    print('Init shut')
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
+            next_socket.connect(next_addr)
+            next_socket.send('shut'.encode(FORMAT))
+            logger.info(f"Shutdown signal sent to {next_addr}")
+    except Exception as e:
+        logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
     
-        print('Init shut')
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
-                next_socket.connect(next_addr)
-                next_socket.send('shut'.encode(FORMAT))
-                logger.info(f"Shutdown signal sent to {next_addr}")
-        except Exception as e:
-            logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
-    
-    print('oi')
-    sys.exit(0)
-
 
 
 def process_queue(address_calculator, logger):
@@ -113,6 +106,9 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
             print('recebida flag')
             flag_shutdown = True
             propagate_shutdown(next_address, logger, server)
+            server.close()
+            client.close()
+            sys.exit(0)
 
         process_queue(address_calculator, logger)
 
@@ -137,7 +133,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44438
+    port = 44439
 
     next_address = next,port 
 
