@@ -65,6 +65,7 @@ def process_queue(node: PeerNode, logger: Logs):
         except Exception as e:
             logger.error(f"Error connecting to calculator: {e}")
             propagate_shutdown(node)
+            return
 
 # Forwards a received message to the next peer in the network.
 def forward_message(next_address: Tuple[str, int], msg: str, logger: logging.Logger):
