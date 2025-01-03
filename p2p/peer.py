@@ -76,19 +76,19 @@ class logs:
         except Exception as e:
             print(f"Error setting up logger: {e}")
 
-def server_run(node: PeerNode, logger: logging.Logger):
+def server_run(logger: logging.Logger):
 
     server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    server.bind((node.host, node.port))  # Bind the server to the specified host and port
+    server.bind((peer_node.host, peer_node.port))  # Bind the server to the specified host and port
     server.listen()  # Start listening for incoming connections 
-    logger.info(f"Server: endpoint running at port {node.port} ...")  # Log server startup
+    logger.info(f"Server: endpoint running at port {peer_node.port} ...")  # Log server startup
 
     initial_time: time.time
     initial_time = time.time()
-    node.my_set[node.host] = initial_time
+    peer_node.my_set[peer_node.host] = initial_time
 
-    for neigh in node.neighboors:
-        node.my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
+    for neigh in peer_node.neighboors:
+        peer_node.my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
 
     while True:
         try:
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     start_anti_entropy()
-    server_run(peer_node, log.logger)
+    server_run(log.logger)
 
 
 
