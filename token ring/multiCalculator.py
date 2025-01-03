@@ -1,22 +1,34 @@
 import socket
 import logging
 import threading
+import signal
 
 PORT: int = 44426
 
 FORMAT: str = 'UTF-8'
 
+shutdown_event = threading.Event()
+
+
+def signal_handler(sig, frame):
+    print("\nSIGINT received. Shutting down...")
+    shutdown_event.set() 
+
+signal.signal(signal.SIGINT, signal_handler)
+
 def server(ADDR: tuple):
     server :socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(ADDR)
     server.listen()
-    while True:
+    while not shutdown_event:
         try:
             client, addr  = server.accept()
             threading.Thread(target=handle_connection, args=(client, )).start()
 
         except Exception as e:
             print(f"Error connection {e}")
+    print(server.close())
+    return 
 
 def handle_connection(client:socket.socket):
     try:
