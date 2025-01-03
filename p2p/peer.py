@@ -31,8 +31,6 @@ threshold).
 '''
 # MAXIMUM TIME WITHOUT UPDATE
 DELTA = 60   
-my_set: dict
-my_set = dict()
 
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / (lambda_/60)
@@ -40,6 +38,33 @@ def poisson_delay(lambda_:int):
 def delay_poisson(lambda_: int):
     return poisson_delay(lambda_)
 
+def merge_set(recv_set):
+    merged = peer_node.my_set
+    for key in recv_set:
+        if key in merged:
+            merged[key] = max(peer_node.my_set[key], recv_set[key])
+        else:
+            merged[key] = recv_set[key]
+
+    peer_node.my_set = merged
+
+def dictionary_operations():
+    current_time = time.time()  # Captura o tempo atual uma vez
+    # Usa compreensão de dicionário para filtrar valores dentro do intervalo DELTA
+    cop = {key: value for key, value in peer_node.my_set.items() if current_time - value <= DELTA}
+    
+    # Adiciona o servidor atual com o tempo atual
+    cop[peer_node.port] = current_time
+    
+    return cop
+
+class PeerNode:
+    def __init__(self, hostname: str, port: int, neighboors):
+        self.host = hostname
+        self.port = port 
+        self.my_set = dict()
+        self.neighboors = set(map(int, neighboors))
+        
 class logs:
     def __init__(self, hostname: str):
         self.host: str = hostname
@@ -53,40 +78,19 @@ class logs:
         except Exception as e:
             print(f"Error setting up logger: {e}")
 
-def merge_set(dic1, dic2):
-    merged = dic1
-    for key in dic2:
-        if key in merged:
-            merged[key] = max(dic1[key], dic2[key])
-        else:
-            merged[key] = dic2[key]
-    return merged
-
-def dictionary_operations(dic: dict[str, float], server_port: int) -> dict[str, float]:
-    current_time = time.time()  # Captura o tempo atual uma vez
-    # Usa compreensão de dicionário para filtrar valores dentro do intervalo DELTA
-    cop = {key: value for key, value in dic.items() if current_time - value <= DELTA}
-    
-    # Adiciona o servidor atual com o tempo atual
-    cop[server_port] = current_time
-    
-    return cop
-
-def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logger):
-    global my_set
+def server_run(node: PeerNode, logger: logging.Logger):
 
     server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    server.bind((host, port))  # Bind the server to the specified host and port
+    server.bind((node.host, node.port))  # Bind the server to the specified host and port
     server.listen()  # Start listening for incoming connections 
-    logger.info(f"Server: endpoint running at port {port} ...")  # Log server startup
-
+    logger.info(f"Server: endpoint running at port {node.port} ...")  # Log server startup
 
     initial_time: time.time
     initial_time = time.time()
-    my_set[port] = initial_time
+    node.my_set[node.port] = initial_time
 
-    for neigh in neighboors:
-        my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
+    for neigh in node.neighboors:
+        node.my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
 
     while True:
         try:
@@ -97,16 +101,14 @@ def server_run(host: str, port: int, neighboors: set[int] , logger: logging.Logg
             logger.info(f"Server: new connection from {client_address[0]}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, neighboors, logger, port)).start()
-        
-
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, logger, node)).start()
+    
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
     
 # Function to handle individual client connections
-def handle_connection(client: socket.socket, client_address: str, neighboors: set[int], logger: logging.Logger, server_port:int):
-    global my_set  # Declare my_set as global
+def handle_connection(client: socket.socket, client_address: str, logger: logging.Logger, node:PeerNode):
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
@@ -115,11 +117,10 @@ def handle_connection(client: socket.socket, client_address: str, neighboors: se
         logger.info(f"Server: message from host {client_address} [command = {received_set}]")
         print(f"{received_set} received from {client_address}")
 
-        my_set = merge_set(my_set, received_set)
+        merge_set(received_set)
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
-
 
 def start_anti_entropy():
     """
@@ -128,27 +129,24 @@ def start_anti_entropy():
     def anti_entropy_cycle():
         while True:
             delay = delay_poisson(4)
-            print(delay)
+            print(f"delay {delay}")
             time.sleep(delay)
             gossiping_message()
 
     threading.Thread(target=anti_entropy_cycle, daemon=True).start()
 
-
 def gossiping_message():
-    global my_set
-    my_set = dictionary_operations(my_set, port)
-    send_data = pickle.dumps(my_set)
-    print(neighboors)
-    for neigh in neighboors:
+    peer_node.my_set = dictionary_operations()
+    send_data = pickle.dumps(peer_node.my_set)
+    print(peer_node.neighboors)
+    for neigh in peer_node.neighboors:
         try:
-            print(f"{my_set} sended to {neigh}")
+            print(f"{peer_node.my_set} sended to {neigh}")
             next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-            next.connect((hostname, neigh))
+            next.connect((neigh, peer_node.port))
             next.sendall(send_data)
         except Exception as e:
             logging.error(f"Error trying connect: {e} {neigh}")
-
 
 if __name__ == "__main__":
     import sys
@@ -158,15 +156,15 @@ if __name__ == "__main__":
         sys.exit(1)  
 
     hostname = sys.argv[1]  # Get hostname from arguments
-    port = int(sys.argv[2])  # Get port from arguments
-    neighboors = sys.argv[3:]
-    neighboors = set(map(int, neighboors))
+    port = 22222  # Get port from arguments
+    neighboors = sys.argv[2:]
     log = logs(hostname)
 
+    peer_node = PeerNode(hostname= hostname, port= port, neighboors= neighboors)
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     start_anti_entropy()
-    server_run(hostname, port, neighboors, log.logger)
+    server_run(peer_node, log.logger)
 
 
 
