@@ -31,13 +31,10 @@ threshold).
 
 '''
 # MAXIMUM TIME WITHOUT UPDATE
-DELTA = 60   
+DELTA = 90  
 
 def poisson_delay(lambda_:int):
     return -math.log(1.0 - random.random()) / (lambda_/60)
-
-def delay_poisson(lambda_: int):
-    return poisson_delay(lambda_)
 
 def merge_set(recv_set):
     merged = peer_node.my_set
@@ -50,11 +47,8 @@ def merge_set(recv_set):
     peer_node.my_set = merged
 
 def dictionary_operations():
-    current_time = time.time()  # Captura o tempo atual uma vez
-    # Usa compreensão de dicionário para filtrar valores dentro do intervalo DELTA
+    current_time = time.time() 
     peer_node.my_set = {key: value for key, value in peer_node.my_set.items() if current_time - value <= DELTA}
-    
-    # Adiciona o servidor atual com o tempo atual
     peer_node.my_set[peer_node.host] = current_time
     
 class PeerNode:
@@ -65,7 +59,6 @@ class PeerNode:
         self.neighboors = set(map(str, neighboors))
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         self.shutdown_flag = threading.Event()
-
         
 class logs:
     def __init__(self, hostname: str):
@@ -94,23 +87,24 @@ def server_run(logger: logging.Logger):
     for neigh in peer_node.neighboors:
         peer_node.my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
 
-    while not peer_node.shutdown_flag.is_set():
-        try:
-            server.settimeout(1)  # Allows checking shutdown_event periodically
-
-            client_socket: socket.socket
-            addr: tuple[str, int]
-            client_socket, addr = server.accept()  # Accept a new client connection
-            client_address: str = addr[0]  # Extract the client address
-            logger.info(f"Server: new connection from {client_address[0]}")  # Log the connection
-
-            # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, logger)).start()
-    
-        except Exception as e:
-            logger.error(f"Error accepting connection: {e}")  # Log any connection errors
-        except socket.timeout:
-            continue  # Check for shutdown_event after timeout
+    try:
+        while not peer_node.shutdown_flag.is_set():
+            try:
+                server.settimeout(1)  # Allows checking shutdown_event periodically
+                client_socket: socket.socket
+                addr: tuple[str, int]
+                client_socket, addr = server.accept()  # Accept a new client connection
+                client_address: str = addr[0]  # Extract the client address
+                logger.info(f"Server: new connection from {client_address[0]}")  # Log the connection
+                # Handle the connection in a separate thread
+                threading.Thread(target=handle_connection, args=(client_socket, client_address, logger)).start()
+            except Exception as e:
+                logger.error(f"Error accepting connection: {e}")  # Log any connection errors
+            except socket.timeout:
+                continue  # Check for shutdown_event after timeout
+    finally:
+        print('Server is closed')
+        server.close()
 
     
 # Function to handle individual client connections
@@ -125,11 +119,10 @@ def handle_connection(client: socket.socket, client_address: str, logger: loggin
 
         merge_set(received_set)
 
-        print(peer_node.my_set)
+        print(f"my current set: {peer_node.my_set}")
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
-
 
     finally:
         client.close()
@@ -140,14 +133,13 @@ def start_anti_entropy():
     """
     def anti_entropy_cycle():
         while True:
-            delay = delay_poisson(4)
-            print(f"delay {delay}")
+            delay = poisson_delay(2)
             time.sleep(delay)
             gossiping_message()
 
     threading.Thread(target=anti_entropy_cycle, daemon=True).start()
 
-def gossiping_message(max_attempts = 4):
+def gossiping_message(max_attempts = 3):
     dictionary_operations()
     send_data = pickle.dumps(peer_node.my_set)
     for neigh in peer_node.neighboors:
@@ -161,7 +153,7 @@ def gossiping_message(max_attempts = 4):
                 break
             except Exception as e:
                 attempts+=1
-                print(f"Attempts {attempts} failed for {neigh}: {e}")
+                print(f"Attempts {attempts} failed for {neigh}: {e}, trying again in 3 seconds ...")
                 time.sleep(3)
                 if attempts > max_attempts:
                     break
@@ -181,7 +173,7 @@ if __name__ == "__main__":
         sys.exit(1)  
 
     hostname = sys.argv[1]  # Get hostname from arguments
-    port = 22222  # Get port from arguments
+    port = 50000  # Get port from arguments
     neighboors = sys.argv[2:]
     log = logs(hostname)
 
