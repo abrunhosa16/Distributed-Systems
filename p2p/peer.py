@@ -5,6 +5,7 @@ import time
 import pickle
 import math
 import random 
+import signal 
 
 '''
 <+ Create a network of 6 peers (p1 to p6), running on different machines (m1 to m6), with
@@ -62,6 +63,9 @@ class PeerNode:
         self.port = port 
         self.my_set = dict()
         self.neighboors = set(map(str, neighboors))
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        self.shutdown_flag = threading.Event()
+
         
 class logs:
     def __init__(self, hostname: str):
@@ -77,8 +81,8 @@ class logs:
             print(f"Error setting up logger: {e}")
 
 def server_run(logger: logging.Logger):
-
-    server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    server = peer_node.server_socket
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((peer_node.host, peer_node.port))  # Bind the server to the specified host and port
     server.listen()  # Start listening for incoming connections 
     logger.info(f"Server: endpoint running at port {peer_node.port} ...")  # Log server startup
@@ -90,8 +94,10 @@ def server_run(logger: logging.Logger):
     for neigh in peer_node.neighboors:
         peer_node.my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
 
-    while True:
+    while not peer_node.shutdown_flag.is_set():
         try:
+            server.settimeout(1)  # Allows checking shutdown_event periodically
+
             client_socket: socket.socket
             addr: tuple[str, int]
             client_socket, addr = server.accept()  # Accept a new client connection
@@ -103,6 +109,8 @@ def server_run(logger: logging.Logger):
     
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
+        except socket.timeout:
+            continue  # Check for shutdown_event after timeout
 
     
 # Function to handle individual client connections
@@ -121,6 +129,10 @@ def handle_connection(client: socket.socket, client_address: str, logger: loggin
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
+
+
+    finally:
+        client.close()
 
 def start_anti_entropy():
     """
@@ -154,27 +166,12 @@ def gossiping_message(max_attempts = 4):
                 if attempts > max_attempts:
                     break
 
+#Captures the SIGINT signal (Ctrl+C) and starts the shutdown process for the server and connected peers.
+def signal_handler(sig, frame):
+    print("\nSIGINT received. Shutting down...")
+    peer_node.shutdown_flag.set() 
 
-# def sending_message(message, max_attempts = 10):
-#     for peer in node.peers: 
-#         attempts = 0
-#         while True:
-#             try:
-#                 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#                 client_socket.connect((peer, node.port))
-#                 client_socket.sendall(message)
-
-#                 if peer not in node.connected_peers:
-#                     node.connected_peers.add(peer)
-#                 break
-#             except socket.error as e:
-#                 attempts+=1
-#                 print(f"Attempts {attempts} failed for {peer}: {e}")
-#                 time.sleep(3)
-#                 if attempts > max_attempts:
-#                     node.connected_peers.remove(peer)
-#                     node.peers.remove(peer)
-#                     break
+signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     import sys
