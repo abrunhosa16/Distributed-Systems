@@ -18,12 +18,12 @@ class PeerNode:
         self.calculator_address = host_calculator, port_calculator
         self.host = hostname
         self.port = port
-
+        self.server_socket =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 def signal_handler(sig, frame):
     print("\nSIGINT received. Shutting down...")
     shutdown_event.set() 
-    propagate_shutdown(peer_node.next_address)
+    propagate_shutdown(peer_node)
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -36,14 +36,19 @@ class Logs:
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
-def propagate_shutdown(next_address: Tuple[str, int]):
+def propagate_shutdown(peer: PeerNode):
     print("Propagating shutdown...")
     try:
         next_socket =  socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        next_socket.connect(next_address)
+        next_socket.connect(peer.next_address)
         next_socket.send("shut".encode(FORMAT))
+        
     except Exception as e:
-        print(f"Failed to send shutdown signal to {next_address}: {e}")
+        print(f"Failed to send shutdown signal to {peer.next_address}: {e}")
+    
+    print('server is closed')
+    peer.server_socket.close()
+
 
 def process_queue(address_calculator, logger):
     while not queue_.empty():
@@ -69,21 +74,17 @@ def forward_message(next_address: Tuple[str, int], msg: str, logger: logging.Log
 
 
 def server_run(logger: logging.Logger, peer_node: PeerNode):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind((peer_node.host, peer_node.port))
-        server.listen()
-
-        logger.info(f"Server running at {peer_node.host}:{peer_node.port}")
-        while not shutdown_event.is_set():
-            try:
-                client_socket, addr = server.accept()
-                threading.Thread(target=handle_connection, args=(client_socket, addr, logger, peer_node)).start()
-            except Exception as e:
-                logger.error(f"Error accepting connection: {e}")
-        print('Server is closed')
-        server.close()
-
+    server = peer_node.server_socket
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind((peer_node.host, peer_node.port))
+    server.listen()
+    logger.info(f"Server running at {peer_node.host}:{peer_node.port}")
+    while not shutdown_event.is_set():
+        try:
+            client_socket, addr = server.accept()
+            threading.Thread(target=handle_connection, args=(client_socket, addr, logger, peer_node)).start()
+        except Exception as e:
+            logger.error(f"Error accepting connection: {e}")    
 
 
 def handle_connection(client: socket.socket, client_address: Tuple[str, int], logger: logging.Logger, peer_node: PeerNode):
@@ -93,7 +94,7 @@ def handle_connection(client: socket.socket, client_address: Tuple[str, int], lo
 
         if msg == "shut":
             shutdown_event.set()
-            propagate_shutdown(peer_node.next_address)
+            propagate_shutdown(peer_node)
             return
 
         process_queue(peer_node.calculator_address, logger)
