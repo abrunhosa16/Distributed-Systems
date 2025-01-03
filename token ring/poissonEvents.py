@@ -4,8 +4,8 @@ import random
 import math 
 import queue
 
-def poisson_delay(lambda_):
-    return -math.log(1.0 - random.random()) / lambda_/60
+def poisson_delay(lambda_:int):
+    return -math.log(1.0 - random.random()) / (lambda_/60)
 
 def get_random_operation():
     operations = ['add', 'sub', 'mul', 'div']
