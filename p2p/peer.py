@@ -54,7 +54,7 @@ def dictionary_operations():
     peer_node.my_set = {key: value for key, value in peer_node.my_set.items() if current_time - value <= DELTA}
     
     # Adiciona o servidor atual com o tempo atual
-    peer_node.my_set[peer_node.port] = current_time
+    peer_node.my_set[peer_node.host] = current_time
     
 class PeerNode:
     def __init__(self, hostname: str, port: int, neighboors):
