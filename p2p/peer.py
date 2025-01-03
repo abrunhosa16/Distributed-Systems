@@ -136,7 +136,8 @@ def start_anti_entropy():
     threading.Thread(target=anti_entropy_cycle, daemon=True).start()
 
 def gossiping_message():
-    peer_node.my_set = dictionary_operations()
+    
+    dictionary_operations()
     send_data = pickle.dumps(peer_node.my_set)
     for neigh in peer_node.neighboors:
         try:
