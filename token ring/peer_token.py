@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     log = Logs(hostname)
     next_address_ = (next_peer_host, port)
-    peer_node = PeerNode(next_address_, host_calculator= calculator_host)
+    peer_node = PeerNode(hostname= hostname, port= port, next_address= next_address_, host_calculator= calculator_host)
 
     print(f"Server starting at {hostname}:{port}")
     generate_requests(4, queue_)
