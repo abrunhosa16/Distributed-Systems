@@ -7,7 +7,7 @@ print(HOST)
 class NodeP:
     def __init__(self, next_):
         self.next_host = next_
-        self.port = 44451
+        self.port = 50000
 def server(node:NodeP):
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
@@ -17,7 +17,6 @@ def server(node:NodeP):
         client.close()
     except Exception as e:
         print(f'Error sending token {e}')
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

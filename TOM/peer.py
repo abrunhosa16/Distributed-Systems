@@ -11,7 +11,7 @@ import signal
 portuguese_cities = ["Lisboa", "Porto", "Coimbra", "Braga", "Aveiro", "Faro", "Serra da Estrela", "Guimarães", "Viseu", "Leiria", "Vale de Cambra", "Sintra", "Viana do Castelo", "Tondela", "Guarda", "Caldas da Rainha", "Covilhã", "Bragança", "Óbidos", "Vinhais", "Mirandela", "Freixo de Espada à Cinta", "Peniche"]   
     
 class PeerNode:
-    def __init__(self, hostname: str, peers: set[int], port:int = 55550):
+    def __init__(self, hostname: str, peers: set[int], port:int = 50000):
         self.hostname = hostname
         self.port = port
         self.peers = peers
@@ -59,7 +59,7 @@ def server_run(node: PeerNode):
         node.connected_peers.clear()
         server.close()
         node.logger.info("Server socket closed.")
-        sys.exit(0)
+        
 
 def handle_connection(client: socket.socket, node: PeerNode, client_address):
     try:
@@ -108,7 +108,6 @@ def propagate_shutdown(node: PeerNode):
     # Set the shutdown flag and log the event
     node.logger.info("Shutting down this peer")
     node.shutdown_flag.set()
-    sys.exit(0)
 
 def sending_message(message, max_attempts = 10):
     for peer in node.peers: 
