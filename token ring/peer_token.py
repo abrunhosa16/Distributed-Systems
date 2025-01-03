@@ -103,14 +103,14 @@ def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger,
 
 # Function to handle individual client connections
 def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator, server):
-    #global flag_shutdown
+    global flag_shutdown
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024).decode(FORMAT)
         logger.info(f"Server: message from host {client_address} [command = {msg}]")            
 
         if msg == 'shut' or flag_shutdown:
-            print('recbida flag')
+            print('recebida flag')
             flag_shutdown = True
             propagate_shutdown(next_address, logger, server)
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44437
+    port = 44438
 
     next_address = next,port 
 
