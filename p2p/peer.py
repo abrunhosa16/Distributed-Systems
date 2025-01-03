@@ -135,18 +135,46 @@ def start_anti_entropy():
 
     threading.Thread(target=anti_entropy_cycle, daemon=True).start()
 
-def gossiping_message():
-    
+def gossiping_message(max_attempts = 4):
     dictionary_operations()
     send_data = pickle.dumps(peer_node.my_set)
     for neigh in peer_node.neighboors:
-        try:
-            print(f"{peer_node.my_set} sended to {neigh}")
-            next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-            next.connect((neigh, peer_node.port))
-            next.sendall(send_data)
-        except Exception as e:
-            logging.error(f"Error trying connect: {e} {neigh}")
+        attempts = 0
+        while True:
+            try:
+                print(f"{peer_node.my_set} sended to {neigh}")
+                next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+                next.connect((neigh, peer_node.port))
+                next.sendall(send_data)
+                break
+            except Exception as e:
+                attempts+=1
+                print(f"Attempts {attempts} failed for {neigh}: {e}")
+                time.sleep(3)
+                if attempts > max_attempts:
+                    break
+
+
+# def sending_message(message, max_attempts = 10):
+#     for peer in node.peers: 
+#         attempts = 0
+#         while True:
+#             try:
+#                 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#                 client_socket.connect((peer, node.port))
+#                 client_socket.sendall(message)
+
+#                 if peer not in node.connected_peers:
+#                     node.connected_peers.add(peer)
+#                 break
+#             except socket.error as e:
+#                 attempts+=1
+#                 print(f"Attempts {attempts} failed for {peer}: {e}")
+#                 time.sleep(3)
+#                 if attempts > max_attempts:
+#                     node.connected_peers.remove(peer)
+#                     node.peers.remove(peer)
+#                     break
 
 if __name__ == "__main__":
     import sys
