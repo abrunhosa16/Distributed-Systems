@@ -4,11 +4,19 @@ import logging
 import time 
 import queue
 from poissonEvents import generate_requests
-import pickle
+import signal
 
 PORT_CALCULATOR: int = 12345
 FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
+flag_shutdown = False
+
+def signal_handler(sig, frame):
+    global flag_shutdown
+    print("\nSIGINT received. Shutting down...")
+    flag_shutdown = True
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 class logs:
@@ -41,39 +49,58 @@ def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger,
             logger.info(f"Server: new connection from {client_address}")  # Log the connection
 
             # Handle the connection in a separate thread
-            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator, host)).start()
+            threading.Thread(target=handle_connection, args=(client_socket, client_address, next_addr, logger, address_calculator)).start()
 
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
 # Function to handle individual client connections
-def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator, host):
+def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator):
+    global flag_shutdown
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024).decode(FORMAT)
         logger.info(f"Server: message from host {client_address} [command = {msg}]")
+        
+
+        if msg == 'shut':
+            flag_shutdown = True
+            try:
+                next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+                next.connect((next_address, 33333))
+                next.send('shut'.encode(FORMAT))
+                sys.exit(0)
+            except Exception as e:
+                print(f'error sending shut to next {e}')
+
 
         while not queue_.empty():
             calculator_server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
             calculator_server.connect(address_calculator)
             try:
                 item: str = queue_.get()
-                send_message = host, item
-                send_message = pickle.dumps(send_message)
-                calculator_server.send(send_message)
+                calculator_server.send(item.encode(FORMAT))
                 result: str= calculator_server.recv(1024).decode(FORMAT)
                 logger.info(f"multiculator: message from calculator [result = {result}]")
                 print(result)
 
             except Exception as e: 
                 print(f"Error connect calculator {e}")
+        if flag_shutdown:
+            next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+            next.connect((next_address, 33333))
+            next.send('shut'.encode(FORMAT))
+            sys.exit(0)
 
-        next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        next.connect((next_address, 33333))
+
+        
         next.send(msg.encode(FORMAT))
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
+
+    finally:
+        client.close()
    
 
 if __name__ == "__main__":
