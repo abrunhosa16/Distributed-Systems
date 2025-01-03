@@ -54,10 +54,8 @@ def dictionary_operations():
     cop = {key: value for key, value in peer_node.my_set.items() if current_time - value <= DELTA}
     
     # Adiciona o servidor atual com o tempo atual
-    cop[peer_node.port] = current_time
+    peer_node.my_set[peer_node.port] = current_time
     
-    return cop
-
 class PeerNode:
     def __init__(self, hostname: str, port: int, neighboors):
         self.host = hostname
@@ -87,7 +85,7 @@ def server_run(node: PeerNode, logger: logging.Logger):
 
     initial_time: time.time
     initial_time = time.time()
-    node.my_set[node.port] = initial_time
+    node.my_set[node.host] = initial_time
 
     for neigh in node.neighboors:
         node.my_set[neigh] = initial_time # Dict indicating the current peer and the neighboors
