@@ -6,7 +6,7 @@ import queue
 from poissonEvents import generate_requests
 import signal
 
-PORT_CALCULATOR: int = 12345
+PORT_CALCULATOR: int = 12346
 FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
 flag_shutdown = False
