@@ -11,12 +11,16 @@ FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
 flag_shutdown = False # Use threading.Event for thread-safe shutdown handling
 
+
+class PeerNode:
+    def __init__(self,next):
+        self.next_address = next
+
+
 def signal_handler(sig, frame):
     global flag_shutdown
     print("\nSIGINT received. Shutting down...")
-    print(f'flag : {flag_shutdown}')
-    flag_shutdown = True
-    print(f'flagg {flag_shutdown}')
+    propagate_shutdown(PeerNode.next_address)
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -34,15 +38,14 @@ class logs:
             print(f"Error setting up logger: {e}")
 
 
-def propagate_shutdown(next_addr: tuple, logger: logging.Logger, server: socket):
+def propagate_shutdown(ad):
     print('Init shut')
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
-            next_socket.connect(next_addr)
+            next_socket.connect(ad)
             next_socket.send('shut'.encode(FORMAT))
-            logger.info(f"Shutdown signal sent to {next_addr}")
     except Exception as e:
-        logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
+        print(f"Failed to send shutdown signal to {ad}: {e}")
     
 
 
@@ -79,7 +82,7 @@ def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger,
     server.listen()  # Start listening for incoming connections (1 = max backlog)
     logger.info(f"Server: endpoint running at port {port} ...")  # Log server startup
 
-    while True:
+    while not flag_shutdown:
         try:
             client_socket: socket.socket
             addr: tuple[str, int]
@@ -133,11 +136,10 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44439
+    port = 44429
 
     next_address = next,port 
-
-
+    ad = PeerNode(next= next_address)
 
     print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     generate_requests(4, queue_)

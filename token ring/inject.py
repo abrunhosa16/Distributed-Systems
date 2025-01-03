@@ -8,7 +8,7 @@ print(HOST)
 try:
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     client.bind((HOST, PORT))
-    client.connect(('l813', 44439))
+    client.connect(('l813', 44429))
 
     client.send(str('token').encode('UTF-8'))
 
