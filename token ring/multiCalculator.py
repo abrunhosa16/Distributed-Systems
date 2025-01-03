@@ -20,15 +20,18 @@ def server(ADDR: tuple):
     server :socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(ADDR)
     server.listen()
-    while not shutdown_event:
-        try:
-            client, addr  = server.accept()
-            threading.Thread(target=handle_connection, args=(client, )).start()
+    try:
+        while not shutdown_event.is_set():
+            try:
+                client, addr  = server.accept()
+                threading.Thread(target=handle_connection, args=(client, )).start()
 
-        except Exception as e:
-            print(f"Error connection {e}")
-    server.close()
-    print('server is closed')
+            except Exception as e:
+                print(f"Error connection {e}")
+    finally:
+        server.close()
+        print('Server is closed')
+    
 
 def handle_connection(client:socket.socket):
     try:
