@@ -134,7 +134,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44445
+    port = 44446
 
     next_address = next,port 
 
