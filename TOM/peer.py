@@ -43,6 +43,8 @@ def poisson_delay(lambda_:int):
 def server_run(node: PeerNode):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Enable port reuse
+    server.settimeout(1)  # Allows checking shutdown_event periodically
+
     server.bind((node.hostname, node.port))
     server.listen()
 
@@ -52,9 +54,9 @@ def server_run(node: PeerNode):
                 client_socket, addr = server.accept()
                 threading.Thread(target=handle_connection, args=(client_socket, node, addr[0])).start()
             except socket.error as e:
-                if node.shutdown_flag.is_set():
-                    break
                 node.logger.error(f"Error accepting connection: {e}")
+            except socket.timeout:
+                continue  # Check for shutdown_event after timeout
     finally:
         node.connected_peers.clear()
         server.close()
