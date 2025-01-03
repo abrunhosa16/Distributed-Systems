@@ -45,9 +45,8 @@ def propagate_shutdown(next_addr: tuple, logger: logging.Logger, server: socket)
                 logger.info(f"Shutdown signal sent to {next_addr}")
         except Exception as e:
             logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
-        
-    server.close()
     
+    print('oi')
     sys.exit(0)
 
 
@@ -109,6 +108,7 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
         logger.info(f"Server: message from host {client_address} [command = {msg}]")            
 
         if msg == 'shut' or flag_shutdown:
+            print('recbida flag')
             flag_shutdown.set()
             propagate_shutdown(next_address, logger)
 
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44448
+    port = 44449
 
     next_address = next,port 
 
