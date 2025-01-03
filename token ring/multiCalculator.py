@@ -61,7 +61,6 @@ def handle_connection(client: socket.socket):
     except Exception as e:
         print(f"Error handling connection: {e}")
     finally:
-        print("Closing client socket...")
         client.close()
 
 
