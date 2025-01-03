@@ -119,7 +119,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     hostname = sys.argv[1]
-    port = 44427
+    port = 44428
     next_peer_host = sys.argv[2]
     next_address_ = (next_peer_host, port)
 
