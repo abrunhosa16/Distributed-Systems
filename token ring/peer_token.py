@@ -17,7 +17,6 @@ flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdow
 #     flag_shutdown.set()
 
 signal.signal(signal.SIGINT, flag_shutdown.set())
-signal.signal(signal.SIGTERM, flag_shutdown.set())
 
 class logs:
     def __init__(self, hostname: str):
