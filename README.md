@@ -1,6 +1,6 @@
 # Distributed Systems Algorithms Implementation by Vinícius Abrunhosa
 
-This project implements three distributed algorithms: **Token Ring**, **Anti-Entropy Gossip**, and **Totally Ordered Multicast**. All algorithms use the same port for communication, and the code is built entirely with Python's native libraries.
+This project implements three distributed algorithms: **Token Ring**, **Anti-Entropy Gossip**, and **Totally Ordered Multicast**. All algorithms use the same port 50000 for communication, and the code is built entirely with Python's native libraries.
 
 ---
 
@@ -64,6 +64,10 @@ Messages sent within the system will follow the totally ordered multicast protoc
 - **Token Ring:** Ensure that all peers in the ring are started before injecting the token.
 - **Anti-Entropy Gossip:** Peers can dynamically join the network by connecting to at least one existing peer.
 - **Totally Ordered Multicast:** All peers must be aware of the full set of participants in the system.
+- **Shutdown Process:** 
+    - To stop a peer gracefully token ring and totally ordered multicast, use Ctrl+C in the terminal where the peer is running.
+    - In anti-entropy gossip Ctrl+C will just close the peer that sent signal.
+
 
 ---
 
@@ -89,8 +93,8 @@ Messages sent within the system will follow the totally ordered multicast protoc
 Start peers with their neighbors:
 ```bash
 python3 peer.py localhost 192.168.1.2 192.168.1.3
-python3 peer.py 192.168.1.2 localhost 192.168.1.3
-python3 peer.py 192.168.1.3 localhost 192.168.1.2
+python3 peer.py 192.168.1.2 localhost 
+python3 peer.py 192.168.1.3 localhost 
 ```
 
 ### Totally Ordered Multicast
@@ -112,8 +116,6 @@ python3 peer.py 192.168.1.3 localhost 192.168.1.2
   - If a peer fails, the algorithm will continue, but some updates might be delayed.
 - **Totally Ordered Multicast:**
   - Ensure all peers are aware of the full list of participants before starting.
-
 ---
-
 
 
