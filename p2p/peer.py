@@ -151,7 +151,7 @@ def gossiping_message():
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) <= 3:
+    if len(sys.argv) <= 2:
         print("Usage: python peer.py <hostname> <port> <ports_peer>")
         sys.exit(1)  
 
