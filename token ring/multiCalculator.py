@@ -2,7 +2,7 @@ import socket
 import logging
 import threading
 
-PORT: int = 12346
+PORT: int = 12347
 
 FORMAT: str = 'UTF-8'
 
