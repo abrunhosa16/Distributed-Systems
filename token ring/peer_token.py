@@ -9,12 +9,12 @@ import signal
 PORT_CALCULATOR: int = 12346
 FORMAT: str = 'UTF-8'
 queue_ = queue.Queue()
-flag_shutdown = False
+flag_shutdown = threading.Event()  # Use threading.Event for thread-safe shutdown handling
 
 def signal_handler(sig, frame):
     global flag_shutdown
     print("\nSIGINT received. Shutting down...")
-    flag_shutdown = True
+    flag_shutdown.set()
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -35,6 +35,8 @@ class logs:
 # Function to start and run the server
 def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger, address_calculator):
     server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
     server.bind((host, port))  # Bind the server to the specified host and port
     server.listen()  # Start listening for incoming connections (1 = max backlog)
     logger.info(f"Server: endpoint running at port {port} ...")  # Log server startup
@@ -54,6 +56,41 @@ def server_run(host: str, port: int, next_addr: tuple  , logger: logging.Logger,
         except Exception as e:
             logger.error(f"Error accepting connection: {e}")  # Log any connection errors
 
+def propagate_shutdown(next_addr: tuple, logger: logging.Logger):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
+            next_socket.connect(next_addr)
+            next_socket.send('shut'.encode(FORMAT))
+            logger.info(f"Shutdown signal sent to {next_addr}")
+    except Exception as e:
+        logger.warning(f"Failed to send shutdown signal to {next_addr}: {e}")
+
+
+def process_queue(address_calculator, logger):
+    while not queue_.empty():
+        calculator_server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        calculator_server.connect(address_calculator)
+        try:
+            item: str = queue_.get()
+            calculator_server.send(item.encode(FORMAT))
+            result: str= calculator_server.recv(1024).decode(FORMAT)
+            logger.info(f"multiculator: message from calculator [result = {result}]")
+            print(result)
+
+        except Exception as e: 
+            print(f"Error connect calculator {e}")
+
+def forward_message(next_addr: tuple, msg: str, logger: logging.Logger):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
+            next_socket.connect(next_addr)
+            next_socket.send(msg.encode(FORMAT))
+            logger.info(f"Message forwarded to {next_addr}: {msg}")
+    except Exception as e:
+        logger.warning(f"Failed to forward message to {next_addr}: {e}")
+
+
+
 # Function to handle individual client connections
 def handle_connection(client: socket.socket, client_address: str, next_address: tuple[str, int], logger: logging.Logger, address_calculator):
     global flag_shutdown
@@ -64,37 +101,19 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
         
 
         if msg == 'shut':
-            flag_shutdown = True
-            try:
-                next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-                next.connect((next_address, 33333))
-                next.send('shut'.encode(FORMAT))
-                sys.exit(0)
-            except Exception as e:
-                print(f'error sending shut to next {e}')
+            propagate_shutdown(next_address, logger)
 
+        process_queue(address_calculator, logger)
 
-        while not queue_.empty():
-            calculator_server: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-            calculator_server.connect(address_calculator)
-            try:
-                item: str = queue_.get()
-                calculator_server.send(item.encode(FORMAT))
-                result: str= calculator_server.recv(1024).decode(FORMAT)
-                logger.info(f"multiculator: message from calculator [result = {result}]")
-                print(result)
-
-            except Exception as e: 
-                print(f"Error connect calculator {e}")
         if flag_shutdown:
             next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-            next.connect((next_address, 33333))
+            next.connect(next_address)
             next.send('shut'.encode(FORMAT))
             sys.exit(0)
 
 
-        
-        next.send(msg.encode(FORMAT))
+        if msg: 
+            forward_message(next_address, msg, logger)
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
@@ -115,9 +134,13 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
+    port = 44444
+
+    next_address = next,port 
 
 
-    print(f"New server @ host={hostname} - port={33333}")  # Inform user of peer initialization
+
+    print(f"New server @ host={hostname} - port={port}")  # Inform user of peer initialization
     generate_requests(4, queue_)
-    server_run(hostname, 33333, next, log.logger, (HOST_CALCULATOR, PORT_CALCULATOR))
+    server_run(hostname, next_address, log.logger, (HOST_CALCULATOR, PORT_CALCULATOR))
 
