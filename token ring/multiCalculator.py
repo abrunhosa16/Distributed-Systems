@@ -3,7 +3,7 @@ import logging
 import threading
 import signal
 
-PORT: int = 44426
+PORT: int = 44427
 
 FORMAT: str = 'UTF-8'
 
@@ -18,6 +18,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def server(ADDR: tuple):
     server :socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow reusing the address
     server.bind(ADDR)
     server.listen()
     try:
@@ -49,6 +50,9 @@ def handle_connection(client:socket.socket):
 
     except Exception as e:
         print(f"handle connection error {e}")
+
+    finally:
+        client.close()
     
     
 def calculator(op: str, x: int, y: int) -> int:
