@@ -109,6 +109,7 @@ def handle_connection(client: socket.socket, client_address: str, next_address: 
         logger.info(f"Server: message from host {client_address} [command = {msg}]")
 
         if msg == 'shut':
+            flag_shutdown.set()
             propagate_shutdown(next_address, logger)
 
         process_queue(address_calculator, logger)
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     HOST_CALCULATOR = sys.argv[3]
     log = logs(hostname)
 
-    port = 44446
+    port = 44447
 
     next_address = next,port 
 
