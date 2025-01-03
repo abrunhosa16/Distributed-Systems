@@ -21,6 +21,7 @@ def generate_requests(lmbda, queue: queue.Queue):
     def request_loop():
         while True:
             delay = poisson_delay(lmbda)  # Calculate poisson delay 
+            print(delay)
             time.sleep(delay)  # Aguarda pelo tempo de atraso
             
             operation = get_random_operation()

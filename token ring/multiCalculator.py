@@ -44,7 +44,7 @@ def calculator(op: str, x: int, y: int) -> int:
     elif op == 'mul':
         return x * y
     elif op == 'div':
-        return x / y 
+        return x / y if y != 0 else 0
     else: 
         return 
 
