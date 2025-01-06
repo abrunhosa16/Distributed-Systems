@@ -116,14 +116,23 @@ def handle_connection(client: socket.socket, client_address: str, logger: loggin
     try:
         # Create input streams for the client connection
         msg: str = client.recv(1024)
-        received_set = pickle.loads(msg)  # load the dict that came from another peer.
+        op, received_set = pickle.loads(msg)  # load the dict that came from another peer.
+
+        if op == 'pull':
+            merge_set(received_set)
+            pickle.dumps(('push', peer_node.my_set))
+            print(f'my current set after pull {peer_node.my_set}')
+            return
+        
+        if op == 'push':
+            merge_set(received_set)
+            print(f'after push my set {peer_node.my_set}')
+            return
 
         logger.info(f"Server: message from host {client_address} [command = {received_set}]")
         #print(f"{received_set} received from {client_address}")
 
-        merge_set(received_set)
 
-        print(f"my current set: {peer_node.my_set}")
 
     except Exception as e:
         logging.error(f"Error handling connection: {e}")  # Log any errors during connection handling
@@ -147,22 +156,22 @@ def start_anti_entropy():
 # Sends the peer's current map to all neighbors as part of the Anti-Entropy algorithm.
 def gossiping_message(max_attempts = 3):
     dictionary_operations()  # Cleans up outdated entries and updates the timestamp
-    send_data = pickle.dumps(peer_node.my_set)
-    for neigh in peer_node.neighboors:
-        attempts = 0
-        while True:
-            try:
-                print(f"{peer_node.my_set} sended to {neigh}")
-                next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-                next.connect((neigh, peer_node.port))
-                next.sendall(send_data)
+    send_data = pickle.dumps(('pull', peer_node.my_set))
+    neigh = random.choice(list(peer_node.neighboors))
+    attempts = 0
+    while True:
+        try:
+            print(f"{peer_node.my_set} sended to {neigh}")
+            next: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+            next.connect((neigh, peer_node.port))
+            next.sendall(send_data)
+            break
+        except Exception as e:
+            attempts+=1
+            print(f"Attempts {attempts} failed for {neigh}: {e}, trying again in 3 seconds ...")
+            time.sleep(3)
+            if attempts > max_attempts:
                 break
-            except Exception as e:
-                attempts+=1
-                print(f"Attempts {attempts} failed for {neigh}: {e}, trying again in 3 seconds ...")
-                time.sleep(3)
-                if attempts > max_attempts:
-                    break
 
 #Captures the SIGINT signal (Ctrl+C) and starts the shutdown process for the server and connected peers.
 def signal_handler(sig, frame):
