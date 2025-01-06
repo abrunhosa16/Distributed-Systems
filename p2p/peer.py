@@ -120,7 +120,8 @@ def handle_connection(client: socket.socket, client_address: str, logger: loggin
 
         if op == 'pull':
             merge_set(received_set)
-            pickle.dumps(('push', peer_node.my_set))
+            msg = pickle.dumps(('push', peer_node.my_set))
+            client.sendall(msg)
             print(f'my current set after pull {peer_node.my_set}')
             return
         
