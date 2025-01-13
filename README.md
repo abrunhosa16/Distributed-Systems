@@ -18,7 +18,7 @@ The **Token Ring** algorithm ensures mutual exclusion in a distributed system by
 #### How to Use:
 1. Run the calculator application:
    ```bash
-   python3 multicalculator.py
+   python3 multiCalculator.py
    ```
 2. Set up the ring by starting each peer. Replace `next_host` and `multicalculator_host` with the appropriate IPs or hostnames:
    ```bash
@@ -74,9 +74,9 @@ Messages sent within the system will follow the totally ordered multicast protoc
 ## Example Execution
 
 ### Token Ring
-1. Start `multicalculator.py`:
+1. Start `multiCalculator.py`:
    ```bash
-   python3 multicalculator.py
+   python3 multiCalculator.py
    ```
 2. Start peers (example for a ring of 3 peers):
    ```bash
